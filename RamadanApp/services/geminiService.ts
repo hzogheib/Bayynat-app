@@ -1,6 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
 
-// API key removed for security. Use environment variables or secure storage.
+// Google API usage removed as per user request.
 
 /**
  * Utility to handle exponential backoff for API calls
