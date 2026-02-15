@@ -1,6 +1,8 @@
 
 # 🌙 Bayynat Ramadan Web App
 
+<!-- Trigger redeploy -->
+
 A high-performance, mobile-first web application for Ramadan prayer timings, based on the official Bayynat (Jaffari) calculations.
 
 ## 🚀 Deployment to GitHub Pages (Free)
