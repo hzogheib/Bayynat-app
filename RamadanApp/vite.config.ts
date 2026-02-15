@@ -8,7 +8,7 @@ export default defineConfig({
   base: '/ramadan-app/',
   define: {
     'process.env': {
-      API_KEY: JSON.stringify(process.env.API_KEY)
+      VITE_API_KEY: JSON.stringify(process.env.VITE_API_KEY)
     }
   }
 });
