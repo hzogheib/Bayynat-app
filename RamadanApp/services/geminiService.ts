@@ -66,7 +66,16 @@ export async function getRamadanInsight(city: string, currentTime: string, nextP
     const result = await fetchWithRetry(async () => {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Provide a short, beautiful spiritual reflection or tip for a fasting person in ${city}. The current local time is ${currentTime} and the next prayer is ${nextPrayer}. Keep it under 150 characters. Use a peaceful tone and relate it to the Shia (Jaffari) spiritual path if possible.`,
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Provide a short, beautiful spiritual reflection or tip for a fasting person in ${city}. The current local time is ${currentTime} and the next prayer is ${nextPrayer}. Keep it under 150 characters. Use a peaceful tone and relate it to the Shia (Jaffari) spiritual path if possible.`
+              }
+            ]
+          }
+        ],
         config: { temperature: 0.7 }
       });
       return response.text;
@@ -95,14 +104,23 @@ export async function getDetailedSchedule(city: string, year: number, month: num
     const result = await fetchWithRetry(async () => {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Generate a daily prayer schedule for ${timeScope} for ${locationString}. 
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Generate a daily prayer schedule for ${timeScope} for ${locationString}. 
         CRITICAL: The current local timezone is ${timezone} (${offsetString}). 
         You MUST ensure the times strictly follow the local wall-clock (Daylight Saving Time rules for this specific region for the requested period).
         Use the Bayynat (Jaffari) calculation method (Maghrib is at the disappearance of the Eastern redness).
         Return a JSON array of objects with keys: 
         - date (YYYY-MM-DD)
         - hijri (e.g., "1 Ramadan 1446")
-        - imsak, fajr, dhuhr, asr, maghrib, isha.`,
+        - imsak, fajr, dhuhr, asr, maghrib, isha.`
+              }
+            ]
+          }
+        ],
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -143,7 +161,16 @@ export async function getCountries() {
     const result = await fetchWithRetry(async () => {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: "Return a JSON list of all sovereign countries in the world, sorted alphabetically. Format: array of strings.",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: "Return a JSON list of all sovereign countries in the world, sorted alphabetically. Format: array of strings."
+              }
+            ]
+          }
+        ],
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -171,7 +198,16 @@ export async function getCities(country: string) {
     const result = await fetchWithRetry(async () => {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Return a JSON list of the top 30 major cities in ${country}. Format: array of strings.`,
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Return a JSON list of the top 30 major cities in ${country}. Format: array of strings.`
+              }
+            ]
+          }
+        ],
         config: {
           responseMimeType: "application/json",
           responseSchema: {
