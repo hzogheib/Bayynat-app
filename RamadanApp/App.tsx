@@ -102,7 +102,7 @@ const App: React.FC = () => {
   const [qiblaBearing, setQiblaBearing] = useState<number>(0);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Calendar View States
   const [calendarType, setCalendarType] = useState<'gregorian' | 'hijri'>('gregorian');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -118,6 +118,30 @@ const App: React.FC = () => {
 
   const athanAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastAthanTriggeredRef = useRef<string | null>(null);
+
+  // City time state
+  const [cityTime, setCityTime] = useState<string>("");
+
+  // Update cityTime using Luxon
+  useEffect(() => {
+    if (!location || !location.city) {
+      setCityTime("");
+      return;
+    }
+    let tz = getCityTimezone(location.city);
+    // If city is 'Current Location', use device timezone
+    if (location.city === "Current Location") {
+      tz = DateTime.local().zoneName;
+    }
+    const updateCityTime = () => {
+      setCityTime(
+        DateTime.now().setZone(tz).toFormat('HH:mm')
+      );
+    };
+    updateCityTime();
+    const interval = setInterval(updateCityTime, 1000);
+    return () => clearInterval(interval);
+  }, [location]);
 
   useEffect(() => {
     athanAudioRef.current = new Audio(ATHAN_AUDIO_URL);

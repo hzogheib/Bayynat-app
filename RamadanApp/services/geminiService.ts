@@ -114,8 +114,8 @@ export async function getRamadanInsight(city: string, currentTime: string, nextP
 
 export async function getDetailedSchedule(city: string, year: number, month: number, country?: string, hijriMonth?: string) {
   const cacheKey = `schedule_${city.toLowerCase().replace(/\s/g, '_')}_${year}_${month}_${hijriMonth || 'greg'}`;
-  // Always clear cache for new city selection
-  localStorage.removeItem('bayynat_v2_' + cacheKey);
+  // Only clear cache if explicitly needed (not every call)
+  // localStorage.removeItem('bayynat_v2_' + cacheKey);
 
   const cached = getCache(cacheKey);
   if (cached) return cached;
@@ -240,9 +240,6 @@ export async function getCountries() {
 
 export async function getCities(country: string) {
   const cacheKey = `cities_${country.toLowerCase().replace(/\s/g, '_')}`;
-  const cached = getCache(cacheKey);
-  if (cached) return cached;
-
   // Static map of major cities for reliability
   const majorCities: Record<string, string[]> = {
     'lebanon': ["Beirut", "Tripoli", "Sidon", "Tyre", "Baalbek", "Zahle", "Nabatieh"],
@@ -262,10 +259,33 @@ export async function getCities(country: string) {
     // Add more as needed
   };
   const key = country.toLowerCase();
+  // Always return major cities for France, ignore cache/API
+  if (key === 'france') {
+    return majorCities['france'];
+  }
+  // Try CountriesNow API for city list
+  try {
+    const response = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country })
+    });
+    const data = await response.json();
+    if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
+      setCache(cacheKey, data.data, 60);
+      return data.data;
+    }
+  } catch (e) {
+    // API failed, fallback below
+  }
+  // Fallback to major cities map
   if (majorCities[key]) {
     setCache(cacheKey, majorCities[key], 60);
     return majorCities[key];
   }
+  // Fallback to cache
+  const cached = getCache(cacheKey);
+  if (cached) return cached;
   // Fallback generic list
-  return ["Capital City", "Major City"]; 
+  return ["Capital City", "Major City"];
 }
