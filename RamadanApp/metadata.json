@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Ramadan Kareem - Bayynat Edition",
+  "description": "A sophisticated Ramadan companion app featuring precise prayer timings based on Bayynat calculations, countdown to Iftar, and automated Athan alerts.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
