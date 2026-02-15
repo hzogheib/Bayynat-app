@@ -26,4 +26,8 @@ docker exec -i <backend_container_name> psql -U postgres -d wizard < /app/init.s
 
 ## Endpoints
 - `POST /api/projects` — create a new project
+<<<<<<< HEAD
 - `GET /api/projects` — list all projects
+=======
+- `GET /api/projects` — list all projects
+>>>>>>> 6cfb464 (Restore original React app landing page and entry points)
