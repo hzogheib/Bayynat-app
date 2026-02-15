@@ -28,7 +28,10 @@ import {
 import { PRAYER_NAMES, ATHAN_AUDIO_URL, RAMADAN_DUAS, calculateQiblaBearing } from './constants';
 import { AppLocation, DayInfo, AppView } from './types';
 import { getRamadanInsight, getDetailedSchedule, getCountries, getCities } from './services/geminiService';
+<<<<<<< HEAD
 import { RAMADAN_2026_PRAYER_TIMES, RamadanDay } from './ramadanTimes2026';
+=======
+>>>>>>> 4062888 (Show city time using luxon when city is selected; keep API for prayer times)
 import { DateTime } from 'luxon';
 
 const GREGORIAN_MONTHS = [
@@ -70,16 +73,19 @@ const addMinutes = (timeStr: string, mins: number): string => {
 
 const CITY_TIMEZONES: Record<string, string> = {
   'beirut': 'Asia/Beirut',
-  'nabatiyeh': 'Asia/Beirut',
   'london': 'Europe/London',
   'new york': 'America/New_York',
   'paris': 'Europe/Paris',
-  'aix-en-provence': 'Europe/Paris',
   'cairo': 'Africa/Cairo',
   'riyadh': 'Asia/Riyadh',
   'dubai': 'Asia/Dubai',
-  'sharjah': 'Asia/Dubai',
-  'doha': 'Asia/Qatar',
+  'london': 'Europe/London',
+  'new york': 'America/New_York',
+  'paris': 'Europe/Paris',
+  'cairo': 'Africa/Cairo',
+  'riyadh': 'Asia/Riyadh',
+  'dubai': 'Asia/Dubai',
+>>>>>>> 4062888 (Show city time using luxon when city is selected; keep API for prayer times)
   'tehran': 'Asia/Tehran',
   'baghdad': 'Asia/Baghdad',
   'karachi': 'Asia/Karachi',
