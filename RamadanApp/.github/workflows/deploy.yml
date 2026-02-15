@@ -27,7 +27,9 @@ jobs:
         run: npm install
 
       - name: Inject VITE_API_KEY
-        run: echo "VITE_API_KEY=${{ secrets.VITE_API_KEY }}" > .env
+        run: |
+          echo "VITE_API_KEY=${{ secrets.VITE_API_KEY }}" > .env
+          echo "VITE_API_KEY_2=${{ secrets.VITE_API_KEY_2 }}" >> .env
 
       - name: Build
         run: npm run build

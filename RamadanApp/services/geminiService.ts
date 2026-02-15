@@ -1,7 +1,9 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
+// Use primary key or fallback to secondary key
+const apiKey = import.meta.env.VITE_API_KEY || import.meta.env.VITE_API_KEY_2;
+const ai = new GoogleGenAI({ apiKey });
 
 /**
  * Utility to handle exponential backoff for API calls
