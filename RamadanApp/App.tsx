@@ -28,9 +28,6 @@ import {
 import { PRAYER_NAMES, ATHAN_AUDIO_URL, RAMADAN_DUAS, calculateQiblaBearing } from './constants';
 import { AppLocation, DayInfo, AppView } from './types';
 import { getRamadanInsight, getDetailedSchedule, getCountries, getCities } from './services/geminiService';
-<<<<<<< HEAD
-import { RAMADAN_2026_PRAYER_TIMES, RamadanDay } from './ramadanTimes2026';
-=======
 >>>>>>> 4062888 (Show city time using luxon when city is selected; keep API for prayer times)
 import { DateTime } from 'luxon';
 
@@ -71,6 +68,7 @@ const addMinutes = (timeStr: string, mins: number): string => {
   }
 };
 
+
 const CITY_TIMEZONES: Record<string, string> = {
   'beirut': 'Asia/Beirut',
   'london': 'Europe/London',
@@ -79,13 +77,6 @@ const CITY_TIMEZONES: Record<string, string> = {
   'cairo': 'Africa/Cairo',
   'riyadh': 'Asia/Riyadh',
   'dubai': 'Asia/Dubai',
-  'london': 'Europe/London',
-  'new york': 'America/New_York',
-  'paris': 'Europe/Paris',
-  'cairo': 'Africa/Cairo',
-  'riyadh': 'Asia/Riyadh',
-  'dubai': 'Asia/Dubai',
->>>>>>> 4062888 (Show city time using luxon when city is selected; keep API for prayer times)
   'tehran': 'Asia/Tehran',
   'baghdad': 'Asia/Baghdad',
   'karachi': 'Asia/Karachi',
@@ -147,6 +138,7 @@ const App: React.FC = () => {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+<<<<<<< HEAD
   // Iftar timer state and effect (must be after todaySchedule/currentTime declarations)
   const [iftarCountdown, setIftarCountdown] = useState<string>("");
   useEffect(() => {
@@ -178,6 +170,8 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [todaySchedule, currentTime, location]);
 
+=======
+>>>>>>> f996080 (Update city selection logic and integrate CountriesNow API for cities)
   // Calendar View States
   const [calendarType, setCalendarType] = useState<'gregorian' | 'hijri'>('gregorian');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
