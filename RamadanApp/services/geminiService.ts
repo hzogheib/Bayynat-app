@@ -1,11 +1,7 @@
 
-<<<<<<< HEAD
-// Google API usage removed as per user request.
-=======
 import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
->>>>>>> 3f8b048 (fix: use VITE_API_KEY for Gemini and update build)
 
 /**
  * Utility to handle exponential backoff for API calls
@@ -152,26 +148,49 @@ export async function getDetailedSchedule(city: string, year: number, month: num
   }
 
   try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-    if (data.code !== 200) {
-      throw new Error(data.status || "Failed to fetch from Aladhan API");
-    }
-    const result = data.data.map((day: any) => {
-      const timings = day.timings;
-      const cleanTime = (t: string | undefined) => t ? t.split(' ')[0] : "";
-      const dateStr = day.date.gregorian.date;
-      return {
-        date: dateStr.split('-').reverse().join('-'),
-        hijri: `${day.date.hijri.day} ${day.date.hijri.month.en} ${day.date.hijri.year}`,
-        imsak: cleanTime(timings.Imsak),
-        fajr: cleanTime(timings.Fajr),
-        sunrise: cleanTime(timings.Sunrise),
-        dhuhr: cleanTime(timings.Dhuhr),
-        asr: cleanTime(timings.Asr),
-        maghrib: cleanTime(timings.Maghrib),
-        isha: cleanTime(timings.Isha)
-      };
+    const result = await fetchWithRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Generate a daily prayer schedule for ${timeScope} for ${locationString}. 
+        CRITICAL: The current local timezone is ${timezone} (${offsetString}). 
+        You MUST ensure the times strictly follow the local wall-clock (Daylight Saving Time rules for this specific region for the requested period).
+        Use the Bayynat (Jaffari) calculation method (Maghrib is at the disappearance of the Eastern redness).
+        Return a JSON array of objects with keys: 
+        - date (YYYY-MM-DD)
+        - hijri (e.g., "1 Ramadan 1446")
+        - imsak, fajr, dhuhr, asr, maghrib, isha.`
+              }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                date: { type: Type.STRING },
+                hijri: { type: Type.STRING },
+                imsak: { type: Type.STRING },
+                fajr: { type: Type.STRING },
+                dhuhr: { type: Type.STRING },
+                asr: { type: Type.STRING },
+                maghrib: { type: Type.STRING },
+                isha: { type: Type.STRING },
+              },
+              required: ["date", "hijri", "fajr", "maghrib"]
+            }
+          }
+        }
+      });
+      return JSON.parse(response.text);
+>>>>>>> a13746a (Fix Gemini API request structure for generateContent)
     });
     setCache(cacheKey, result, 30);
     return result;
@@ -182,15 +201,76 @@ export async function getDetailedSchedule(city: string, year: number, month: num
 }
 
 export async function getCountries() {
-  // Only return the allowed countries
-  return [
-    "France",
-    "Gambia",
-    "Lebanon",
-    "Qatar",
-    "Saudi Arabia",
-    "United Arab Emirates"
-  ];
+  const cacheKey = 'countries_list';
+  const cached = getCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const result = await fetchWithRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: "Return a JSON list of all sovereign countries in the world, sorted alphabetically. Format: array of strings."
+              }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        }
+      });
+      return JSON.parse(response.text);
+    });
+    setCache(cacheKey, result, 60); // Cache countries for 60 days
+    return result;
+  } catch (error) {
+    console.error("Gemini Countries Error:", error);
+    return ["Lebanon", "Iraq", "Iran", "Kuwait", "Saudi Arabia", "United Arab Emirates", "United Kingdom", "USA", "Canada", "Australia", "Germany", "France"];
+  }
+}
+  const cacheKey = 'countries_list';
+  const cached = getCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const result = await fetchWithRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: "Return a JSON list of all sovereign countries in the world, sorted alphabetically. Format: array of strings."
+              }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        }
+      });
+      return JSON.parse(response.text);
+    });
+    setCache(cacheKey, result, 60); // Cache countries for 60 days
+    return result;
+  } catch (error) {
+    console.error("Gemini Countries Error:", error);
+    return ["Lebanon", "Iraq", "Iran", "Kuwait", "Saudi Arabia", "United Arab Emirates", "United Kingdom", "USA", "Canada", "Australia", "Germany", "France"];
+  }
+>>>>>>> a13746a (Fix Gemini API request structure for generateContent)
 }
 
 export async function getCities(country: string) {
@@ -234,6 +314,70 @@ export async function getCities(country: string) {
   // Fallback to cache
   const cached = getCache(cacheKey);
   if (cached) return cached;
-  // Fallback generic list
-  return ["Capital City", "Major City"];
+
+  try {
+    const result = await fetchWithRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Return a JSON list of the top 30 major cities in ${country}. Format: array of strings.`
+              }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        }
+      });
+      return JSON.parse(response.text);
+    });
+    setCache(cacheKey, result, 60); // Cache cities for 60 days
+    return result;
+  } catch (error) {
+    console.error("Gemini Cities Error:", error);
+    // Return empty or common cities as fallback if needed
+    return [];
+  }
+}
+
+  try {
+    const result = await fetchWithRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Return a JSON list of the top 30 major cities in ${country}. Format: array of strings.`
+              }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        }
+      });
+      return JSON.parse(response.text);
+    });
+    setCache(cacheKey, result, 60); // Cache cities for 60 days
+    return result;
+  } catch (error) {
+    console.error("Gemini Cities Error:", error);
+    // Return empty or common cities as fallback if needed
+    return [];
+  }
+>>>>>>> a13746a (Fix Gemini API request structure for generateContent)
 }
