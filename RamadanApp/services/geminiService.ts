@@ -1,5 +1,11 @@
 
+<<<<<<< HEAD
 // Google API usage removed as per user request.
+=======
+import { GoogleGenAI, Type } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
+>>>>>>> 3f8b048 (fix: use VITE_API_KEY for Gemini and update build)
 
 /**
  * Utility to handle exponential backoff for API calls
