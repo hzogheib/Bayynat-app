@@ -114,8 +114,11 @@ export async function getRamadanInsight(city: string, currentTime: string, nextP
 
 export async function getDetailedSchedule(city: string, year: number, month: number, country?: string, hijriMonth?: string) {
   const cacheKey = `schedule_${city.toLowerCase().replace(/\s/g, '_')}_${year}_${month}_${hijriMonth || 'greg'}`;
-  // Only clear cache if explicitly needed (not every call)
-  // localStorage.removeItem('bayynat_v2_' + cacheKey);
+  // Always clear cache for new city selection
+  localStorage.removeItem('bayynat_v2_' + cacheKey);
+  // Always clear cache for new city selection
+  localStorage.removeItem('bayynat_v2_' + cacheKey);
+>>>>>>> 3fc9f39 (Automatically clear schedule cache for new city selection)
 
   const cached = getCache(cacheKey);
   if (cached) return cached;
