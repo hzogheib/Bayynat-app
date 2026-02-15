@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 // Use primary key or fallback to secondary key
 const apiKey = import.meta.env.VITE_API_KEY || import.meta.env.VITE_API_KEY_2;
-const ai = new GoogleGenAI({ apiKey });
+// const ai = new GoogleGenAI({ apiKey });
 
 /**
  * Utility to handle exponential backoff for API calls
@@ -121,33 +121,14 @@ export async function getDetailedSchedule(city: string, year: number, month: num
   const cached = getCache(cacheKey);
   if (cached) return cached;
 
-  // Timezone lookup for common cities
-  const cityTimezones: Record<string, string> = {
-    'beirut': 'Asia/Beirut',
-    'london': 'Europe/London',
-    'new york': 'America/New_York',
-    'paris': 'Europe/Paris',
-    'cairo': 'Africa/Cairo',
-    'riyadh': 'Asia/Riyadh',
-    'dubai': 'Asia/Dubai',
-    'tehran': 'Asia/Tehran',
-    'baghdad': 'Asia/Baghdad',
-    'karachi': 'Asia/Karachi',
-    'jakarta': 'Asia/Jakarta',
-    'istanbul': 'Europe/Istanbul',
-    // Add more as needed
-  };
-  const cleanCity = city.split(',')[0].trim();
-  const cleanCountry = country || "Lebanon";
-  const methodId = 0;
-  const cityKey = cleanCity.toLowerCase();
-  const timezone = cityTimezones[cityKey] || '';
 
-  // Use calendarByAddress for reliable timezone handling
-  let apiUrl = `https://api.aladhan.com/v1/calendarByAddress?address=${encodeURIComponent(cleanCity + ', ' + cleanCountry)}&year=${year}&month=${month}&method=${methodId}&school=0`;
-  if (timezone) {
-    apiUrl += `&timezone=${encodeURIComponent(timezone)}`;
-  }
+  /*
+  const locationString = country ? `${city}, ${country}` : city;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const offsetMinutes = new Date().getTimezoneOffset();
+  const offsetHours = -offsetMinutes / 60;
+  const offsetString = `UTC${offsetHours >= 0 ? '+' : ''}${offsetHours}`;
+  let timeScope = hijriMonth ? `the Hijri month of ${hijriMonth} ${year}` : `the month ${month} of ${year}`;
 
   try {
     const result = await fetchWithRetry(async () => {
@@ -200,96 +181,113 @@ export async function getDetailedSchedule(city: string, year: number, month: num
     console.error("Schedule Fetch Error:", error);
     throw error;
   }
-}
+  */
 
-export async function getCountries() {
-  const cacheKey = 'countries_list';
-  const cached = getCache(cacheKey);
-  if (cached) return cached;
-
-  try {
-    const result = await fetchWithRetry(async () => {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: "Return a JSON list of all sovereign countries in the world, sorted alphabetically. Format: array of strings."
-              }
-            ]
-          }
-        ],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          }
-        }
-      });
-      return JSON.parse(response.text);
-    });
-    setCache(cacheKey, result, 60); // Cache countries for 60 days
-    return result;
-  } catch (error) {
-    console.error("Gemini Countries Error:", error);
-    return ["Lebanon", "Iraq", "Iran", "Kuwait", "Saudi Arabia", "United Arab Emirates", "United Kingdom", "USA", "Canada", "Australia", "Germany", "France"];
-  }
-}
-  const cacheKey = 'countries_list';
-  const cached = getCache(cacheKey);
-  if (cached) return cached;
+  // Alternative implementation using Aladhan API
+  // https://aladhan.com/prayer-times-api#GetCalendarByCitys
+  // Method 0 is Shia Ithna-Ashari, Leva Institute, Qum
+  // Method 4 is Small Inteval (often used for Shia in some apps but check docs)
+  // Let's use Method 0 (Shia Ithna-Ansari) or Method 10 (Institute of Geophysics, University of Tehran) which is common.
+  // Method 0 params: Fajr 16deg, Maghrib 4deg? - check Aladhan docs: https://aladhan.com/prayer-times-api#GetCalendarByCitys
+  // "0": "Shia Ithna-Ashari, Leva Institute, Qum"
+  // "4": "Umm al-Qura University, Makkah" (Sunni)
+  // "5": "Egyptian General Authority of Survey"
+  // "7": "Institute of Geophysics, University of Tehran"
+  // Let's stick with 0 or 7 for Shia/Jaffari.
 
   try {
-    const result = await fetchWithRetry(async () => {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: "Return a JSON list of all sovereign countries in the world, sorted alphabetically. Format: array of strings."
-              }
-            ]
-          }
-        ],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          }
-        }
-      });
-      return JSON.parse(response.text);
-    });
-    setCache(cacheKey, result, 60); // Cache countries for 60 days
-    return result;
+     const cleanCity = city.split(',')[0].trim();
+     const cleanCountry = country || "Lebanon"; // Default fallback
+     
+     // Method 0: Shia Ithna-Ashari, Leva Institute, Qum
+     // Method 7: Institute of Geophysics, University of Tehran
+     const methodId = 0; 
+
+     const apiUrl = `https://api.aladhan.com/v1/calendarByCity/${year}/${month}?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=${methodId}&school=0`; 
+     // school=0 for Shafi, 1 for Hanafi. Doesn't affect Shia calc usually, but keep default.
+
+     const response = await fetch(apiUrl);
+     const data = await response.json();
+     
+     if (data.code !== 200) {
+        throw new Error(data.status || "Failed to fetch from Aladhan API");
+     }
+
+     // Transform Aladhan data format to our app format
+     const result = data.data.map((day: any) => {
+        const timings = day.timings;
+        
+       const cleanTime = (t: string | undefined) => t ? t.split(' ')[0] : "";
+       const dateStr = day.date.gregorian.date; // "16-02-2026"
+       
+       return {
+         date: dateStr.split('-').reverse().join('-'), // "2026-02-16"
+         hijri: `${day.date.hijri.day} ${day.date.hijri.month.en} ${day.date.hijri.year}`,
+         imsak: cleanTime(timings.Imsak),
+         fajr: cleanTime(timings.Fajr),
+         sunrise: cleanTime(timings.Sunrise),
+         dhuhr: cleanTime(timings.Dhuhr),
+         asr: cleanTime(timings.Asr),
+         maghrib: cleanTime(timings.Maghrib),
+         isha: cleanTime(timings.Isha)
+       };
+     });
+     
+     setCache(cacheKey, result, 30);
+     return result;
+
   } catch (error) {
-    console.error("Gemini Countries Error:", error);
-    return ["Lebanon", "Iraq", "Iran", "Kuwait", "Saudi Arabia", "United Arab Emirates", "United Kingdom", "USA", "Canada", "Australia", "Germany", "France"];
+     console.error("Schedule Fetch Error:", error);
+     throw error;
   }
->>>>>>> a13746a (Fix Gemini API request structure for generateContent)
 }
 
-export async function getCities(country: string) {
-  const cacheKey = `cities_${country.toLowerCase().replace(/\s/g, '_')}`;
-  // Static map of major cities for reliability
-  // Only allow specific cities for each allowed country
-  const majorCities: Record<string, string[]> = {
-    'france': ["Marseille", "Paris", "Aix-en-Provence"],
-    'gambia': ["Banjul"],
-    'lebanon': ["Beirut", "Nabatiyeh"],
-    'qatar': ["Doha"],
-    'saudi arabia': ["Riyadh"],
-    'united arab emirates': ["Dubai", "Sharjah"]
-  };
-  // Always return major cities for allowed countries, ignore cache/API
-  const key = country.toLowerCase();
-  if (majorCities[key]) {
+
+  try {
+     const cleanCity = city.split(',')[0].trim();
+     const cleanCountry = country || "Lebanon"; // Default fallback
+     
+     // Method 0: Shia Ithna-Ashari, Leva Institute, Qum
+     // Method 7: Institute of Geophysics, University of Tehran
+     const methodId = 0; 
+
+     const apiUrl = `https://api.aladhan.com/v1/calendarByCity/${year}/${month}?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=${methodId}&school=0`; 
+     // school=0 for Shafi, 1 for Hanafi. Doesn't affect Shia calc usually, but keep default.
+
+     const response = await fetch(apiUrl);
+     const data = await response.json();
+     if (data.code !== 200) {
+        throw new Error(data.status || "Failed to fetch from Aladhan API");
+     }
+
+     // Transform Aladhan data format to our app format
+     const result = data.data.map((day: any) => {
+        const timings = day.timings;
+        
+       const cleanTime = (t: string | undefined) => t ? t.split(' ')[0] : "";
+       const dateStr = day.date.gregorian.date; // "16-02-2026"
+       
+       return {
+         date: dateStr.split('-').reverse().join('-'), // "2026-02-16"
+         hijri: `${day.date.hijri.day} ${day.date.hijri.month.en} ${day.date.hijri.year}`,
+         imsak: cleanTime(timings.Imsak),
+         fajr: cleanTime(timings.Fajr),
+         sunrise: cleanTime(timings.Sunrise),
+         dhuhr: cleanTime(timings.Dhuhr),
+         asr: cleanTime(timings.Asr),
+         maghrib: cleanTime(timings.Maghrib),
+         isha: cleanTime(timings.Isha)
+       };
+     });
+     
+     setCache(cacheKey, result, 30);
+     return result;
+
+  } catch (error) {
+     console.error("Schedule Fetch Error:", error);
+     throw error;
+  }
+}
     return majorCities[key].sort();
   }
   return [];
@@ -317,6 +315,7 @@ export async function getCities(country: string) {
   const cached = getCache(cacheKey);
   if (cached) return cached;
 
+  /*
   try {
     const result = await fetchWithRetry(async () => {
       const response = await ai.models.generateContent({
@@ -348,6 +347,36 @@ export async function getCities(country: string) {
     // Return empty or common cities as fallback if needed
     return [];
   }
+  */
+  
+  try {
+     const response = await fetch("https://countriesnow.space/api/v0.1/countries/cities", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ country: country }) 
+     });
+     
+     const data = await response.json();
+     if (!data.error && data.data) {
+        // The API returns all cities. For better UX, we limit to a reasonable number if the list is huge, 
+        // but since we want "major" cities and don't have population data, we'll take the first 100 which usually includes major ones,
+        // or just return all if reasonable. Cities are often sorted alphabetically.
+        const cities = data.data; 
+        const result = cities.length > 200 ? cities.slice(0, 200) : cities;
+        setCache(cacheKey, result, 60);
+        return result;
+     } else {
+        // specific fallbacks for common countries if API fails or returns empty
+        if (country.toLowerCase() === "lebanon") return ["Beirut", "Tripoli", "Sidon", "Tyre", "Baalbek", "Zahle", "Nabatieh"];
+        if (country.toLowerCase() === "united states") return ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"];
+        if (country.toLowerCase() === "united kingdom") return ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Sheffield", "Bristol", "Edinburgh", "Leicester"];
+     }
+  } catch (e) {
+     console.warn("Failed to fetch cities API", e);
+  }
+
+  // Fallback generic list if all else fails
+  return ["Capital City", "Major City"]; 
 }
 
   try {
