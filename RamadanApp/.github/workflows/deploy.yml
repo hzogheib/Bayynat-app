@@ -5,10 +5,7 @@ on:
   push:
     branches:
       - master
-<<<<<<< HEAD
-  workflow_dispatch:
-=======
->>>>>>> 3c47caa (Update GitHub Pages deploy workflow for master branch and peaceiris action)
+
 
 permissions:
   contents: write
@@ -31,9 +28,7 @@ jobs:
         run: npm install
 
       - name: Inject VITE_API_KEY
-        run: |
-          echo "VITE_API_KEY=${{ secrets.VITE_API_KEY }}" > .env
-          echo "VITE_API_KEY_2=${{ secrets.VITE_API_KEY_2 }}" >> .env
+  run: echo "VITE_API_KEY=${{ secrets.VITE_API_KEY }}" > .env
 
       - name: Build
         run: npm run build
