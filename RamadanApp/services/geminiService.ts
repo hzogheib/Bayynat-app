@@ -320,31 +320,30 @@ export async function getDetailedSchedule(city: string, year: number, month: num
   const cached = getCache(cacheKey);
   if (cached) return cached;
 
-  try {
-     const response = await fetch("https://countriesnow.space/api/v0.1/countries/cities", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country: country }) 
-     });
-     const data = await response.json();
-     if (!data.error && data.data) {
-        let cities = data.data;
-        // Always include Paris for France
-        if (country.toLowerCase() === "france" && !cities.includes("Paris")) {
-          cities = ["Paris", ...cities];
-        }
-        const result = cities.length > 200 ? cities.slice(0, 200) : cities;
-        setCache(cacheKey, result, 60);
-        return result;
-     } else {
-        if (country.toLowerCase() === "lebanon") return ["Beirut", "Tripoli", "Sidon", "Tyre", "Baalbek", "Zahle", "Nabatieh"];
-        if (country.toLowerCase() === "united states") return ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"];
-        if (country.toLowerCase() === "united kingdom") return ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Sheffield", "Bristol", "Edinburgh", "Leicester"];
-        if (country.toLowerCase() === "france") return ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille"];
-     }
-  } catch (e) {
-     console.warn("Failed to fetch cities API", e);
+  // Static map of major cities for reliability
+  const majorCities: Record<string, string[]> = {
+    'lebanon': ["Beirut", "Tripoli", "Sidon", "Tyre", "Baalbek", "Zahle", "Nabatieh"],
+    'france': ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille"],
+    'united states': ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"],
+    'united kingdom': ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Sheffield", "Bristol", "Edinburgh", "Leicester"],
+    'germany': ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"],
+    'egypt': ["Cairo", "Alexandria", "Giza", "Shubra El Kheima", "Port Said", "Suez", "Luxor", "Aswan", "Tanta", "Mansoura"],
+    'turkey': ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Gaziantep", "Konya", "Antalya", "Kayseri", "Mersin"],
+    'iraq': ["Baghdad", "Basra", "Mosul", "Erbil", "Najaf", "Karbala", "Sulaymaniyah", "Kirkuk", "Diwaniya", "Nasiriyah"],
+    'iran': ["Tehran", "Mashhad", "Isfahan", "Karaj", "Shiraz", "Tabriz", "Qom", "Ahvaz", "Kermanshah", "Urmia"],
+    'saudi arabia': ["Riyadh", "Jeddah", "Mecca", "Medina", "Dammam", "Khobar", "Tabuk", "Buraidah", "Abha", "Hail"],
+    'pakistan': ["Karachi", "Lahore", "Faisalabad", "Rawalpindi", "Multan", "Peshawar", "Islamabad", "Quetta", "Sialkot", "Gujranwala"],
+    'india': ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat", "Pune", "Jaipur"],
+    'canada': ["Toronto", "Montreal", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Winnipeg", "Quebec City", "Hamilton", "Kitchener"],
+    'australia': ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Canberra", "Newcastle", "Wollongong", "Logan City"],
+    // Add more as needed
+  };
+  const key = country.toLowerCase();
+  if (majorCities[key]) {
+    setCache(cacheKey, majorCities[key], 60);
+    return majorCities[key];
   }
+  // Fallback generic list
   return ["Capital City", "Major City"]; 
 }
 
