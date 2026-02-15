@@ -139,7 +139,8 @@ export async function getDetailedSchedule(city: string, year: number, month: num
   const cityKey = cleanCity.toLowerCase();
   const timezone = cityTimezones[cityKey] || '';
 
-  let apiUrl = `https://api.aladhan.com/v1/calendarByCity/${year}/${month}?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=${methodId}&school=0`;
+  // Use calendarByAddress for reliable timezone handling
+  let apiUrl = `https://api.aladhan.com/v1/calendarByAddress?address=${encodeURIComponent(cleanCity + ', ' + cleanCountry)}&year=${year}&month=${month}&method=${methodId}&school=0`;
   if (timezone) {
     apiUrl += `&timezone=${encodeURIComponent(timezone)}`;
   }
@@ -239,66 +240,30 @@ export async function getCities(country: string) {
   const cached = getCache(cacheKey);
   if (cached) return cached;
 
-  /*
-  try {
-    const result = await fetchWithRetry(async () => {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: `Return a JSON list of the top 30 major cities in ${country}. Format: array of strings.`
-              }
-            ]
-          }
-        ],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          }
-        }
-      });
-      return JSON.parse(response.text);
-    });
-    setCache(cacheKey, result, 60); // Cache cities for 60 days
-    return result;
-  } catch (error) {
-    console.error("Gemini Cities Error:", error);
-    // Return empty or common cities as fallback if needed
-    return [];
-  }
-  */
-  
   try {
      const response = await fetch("https://countriesnow.space/api/v0.1/countries/cities", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ country: country }) 
      });
-     
      const data = await response.json();
      if (!data.error && data.data) {
-        // The API returns all cities. For better UX, we limit to a reasonable number if the list is huge, 
-        // but since we want "major" cities and don't have population data, we'll take the first 100 which usually includes major ones,
-        // or just return all if reasonable. Cities are often sorted alphabetically.
-        const cities = data.data; 
+        let cities = data.data;
+        // Always include Paris for France
+        if (country.toLowerCase() === "france" && !cities.includes("Paris")) {
+          cities = ["Paris", ...cities];
+        }
         const result = cities.length > 200 ? cities.slice(0, 200) : cities;
         setCache(cacheKey, result, 60);
         return result;
      } else {
-        // specific fallbacks for common countries if API fails or returns empty
         if (country.toLowerCase() === "lebanon") return ["Beirut", "Tripoli", "Sidon", "Tyre", "Baalbek", "Zahle", "Nabatieh"];
         if (country.toLowerCase() === "united states") return ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"];
         if (country.toLowerCase() === "united kingdom") return ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Sheffield", "Bristol", "Edinburgh", "Leicester"];
+        if (country.toLowerCase() === "france") return ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille"];
      }
   } catch (e) {
      console.warn("Failed to fetch cities API", e);
   }
-
-  // Fallback generic list if all else fails
   return ["Capital City", "Major City"]; 
 }
