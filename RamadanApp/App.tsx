@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   Moon, 
@@ -29,6 +28,7 @@ import {
 import { PRAYER_NAMES, ATHAN_AUDIO_URL, RAMADAN_DUAS, calculateQiblaBearing } from './constants';
 import { AppLocation, DayInfo, AppView } from './types';
 import { getRamadanInsight, getDetailedSchedule, getCountries, getCities } from './services/geminiService';
+import { DateTime } from 'luxon';
 
 const GREGORIAN_MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -65,6 +65,27 @@ const addMinutes = (timeStr: string, mins: number): string => {
   } catch (e) {
     return timeStr;
   }
+};
+
+const CITY_TIMEZONES: Record<string, string> = {
+  'beirut': 'Asia/Beirut',
+  'london': 'Europe/London',
+  'new york': 'America/New_York',
+  'paris': 'Europe/Paris',
+  'cairo': 'Africa/Cairo',
+  'riyadh': 'Asia/Riyadh',
+  'dubai': 'Asia/Dubai',
+  'tehran': 'Asia/Tehran',
+  'baghdad': 'Asia/Baghdad',
+  'karachi': 'Asia/Karachi',
+  'jakarta': 'Asia/Jakarta',
+  'istanbul': 'Europe/Istanbul',
+  // Add more as needed
+};
+
+const getCityTimezone = (city: string) => {
+  const key = city.toLowerCase();
+  return CITY_TIMEZONES[key] || 'UTC';
 };
 
 const App: React.FC = () => {
@@ -400,8 +421,8 @@ const App: React.FC = () => {
             <div className="flex items-center gap-1.5 font-medium text-sm">
               <Clock size={16} className="text-[#c5a021]" />
               <span className="flex items-center gap-1">
-                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-                <span className="text-[10px] text-slate-300 font-bold bg-slate-100 px-1 rounded">{getTimezoneName()}</span>
+                {cityTime}
+                <span className="text-[10px] text-slate-300 font-bold bg-slate-100 px-1 rounded">{getCityTimezone(location?.city || "")}</span>
               </span>
             </div>
             <button 
