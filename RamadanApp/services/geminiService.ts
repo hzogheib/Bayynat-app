@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Use primary key or fallback to secondary key
@@ -118,122 +117,60 @@ export async function getDetailedSchedule(city: string, year: number, month: num
   const cached = getCache(cacheKey);
   if (cached) return cached;
 
-  /*
-  const locationString = country ? `${city}, ${country}` : city;
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const offsetMinutes = new Date().getTimezoneOffset();
-  const offsetHours = -offsetMinutes / 60;
-  const offsetString = `UTC${offsetHours >= 0 ? '+' : ''}${offsetHours}`;
-  let timeScope = hijriMonth ? `the Hijri month of ${hijriMonth} ${year}` : `the month ${month} of ${year}`;
+  // Timezone lookup for common cities
+  const cityTimezones: Record<string, string> = {
+    'beirut': 'Asia/Beirut',
+    'london': 'Europe/London',
+    'new york': 'America/New_York',
+    'paris': 'Europe/Paris',
+    'cairo': 'Africa/Cairo',
+    'riyadh': 'Asia/Riyadh',
+    'dubai': 'Asia/Dubai',
+    'tehran': 'Asia/Tehran',
+    'baghdad': 'Asia/Baghdad',
+    'karachi': 'Asia/Karachi',
+    'jakarta': 'Asia/Jakarta',
+    'istanbul': 'Europe/Istanbul',
+    // Add more as needed
+  };
+  const cleanCity = city.split(',')[0].trim();
+  const cleanCountry = country || "Lebanon";
+  const methodId = 0;
+  const cityKey = cleanCity.toLowerCase();
+  const timezone = cityTimezones[cityKey] || '';
+
+  let apiUrl = `https://api.aladhan.com/v1/calendarByCity/${year}/${month}?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=${methodId}&school=0`;
+  if (timezone) {
+    apiUrl += `&timezone=${encodeURIComponent(timezone)}`;
+  }
 
   try {
-    const result = await fetchWithRetry(async () => {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: `Generate a daily prayer schedule for ${timeScope} for ${locationString}. 
-        CRITICAL: The current local timezone is ${timezone} (${offsetString}). 
-        You MUST ensure the times strictly follow the local wall-clock (Daylight Saving Time rules for this specific region for the requested period).
-        Use the Bayynat (Jaffari) calculation method (Maghrib is at the disappearance of the Eastern redness).
-        Return a JSON array of objects with keys: 
-        - date (YYYY-MM-DD)
-        - hijri (e.g., "1 Ramadan 1446")
-        - imsak, fajr, dhuhr, asr, maghrib, isha.`
-              }
-            ]
-          }
-        ],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                date: { type: Type.STRING },
-                hijri: { type: Type.STRING },
-                imsak: { type: Type.STRING },
-                fajr: { type: Type.STRING },
-                dhuhr: { type: Type.STRING },
-                asr: { type: Type.STRING },
-                maghrib: { type: Type.STRING },
-                isha: { type: Type.STRING },
-              },
-              required: ["date", "hijri", "fajr", "maghrib"]
-            }
-          }
-        }
-      });
-      return JSON.parse(response.text);
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    if (data.code !== 200) {
+      throw new Error(data.status || "Failed to fetch from Aladhan API");
+    }
+    const result = data.data.map((day: any) => {
+      const timings = day.timings;
+      const cleanTime = (t: string | undefined) => t ? t.split(' ')[0] : "";
+      const dateStr = day.date.gregorian.date;
+      return {
+        date: dateStr.split('-').reverse().join('-'),
+        hijri: `${day.date.hijri.day} ${day.date.hijri.month.en} ${day.date.hijri.year}`,
+        imsak: cleanTime(timings.Imsak),
+        fajr: cleanTime(timings.Fajr),
+        sunrise: cleanTime(timings.Sunrise),
+        dhuhr: cleanTime(timings.Dhuhr),
+        asr: cleanTime(timings.Asr),
+        maghrib: cleanTime(timings.Maghrib),
+        isha: cleanTime(timings.Isha)
+      };
     });
-    setCache(cacheKey, result, 30); // Cache schedules for a month
+    setCache(cacheKey, result, 30);
     return result;
   } catch (error) {
-    console.error("Gemini Schedule Error:", error);
-    throw error; // Let the UI handle the error state
-  }
-  */
-
-  // Alternative implementation using Aladhan API
-  // https://aladhan.com/prayer-times-api#GetCalendarByCitys
-  // Method 0 is Shia Ithna-Ashari, Leva Institute, Qum
-  // Method 4 is Small Inteval (often used for Shia in some apps but check docs)
-  // Let's use Method 0 (Shia Ithna-Ansari) or Method 10 (Institute of Geophysics, University of Tehran) which is common.
-  // Method 0 params: Fajr 16deg, Maghrib 4deg? - check Aladhan docs: https://aladhan.com/prayer-times-api#GetCalendarByCitys
-  // "0": "Shia Ithna-Ashari, Leva Institute, Qum"
-  // "4": "Umm al-Qura University, Makkah" (Sunni)
-  // "5": "Egyptian General Authority of Survey"
-  // "7": "Institute of Geophysics, University of Tehran"
-  // Let's stick with 0 or 7 for Shia/Jaffari.
-
-  try {
-     const cleanCity = city.split(',')[0].trim();
-     const cleanCountry = country || "Lebanon"; // Default fallback
-     
-     // Method 0: Shia Ithna-Ashari, Leva Institute, Qum
-     // Method 7: Institute of Geophysics, University of Tehran
-     const methodId = 0; 
-
-     const apiUrl = `https://api.aladhan.com/v1/calendarByCity/${year}/${month}?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=${methodId}&school=0`; 
-     // school=0 for Shafi, 1 for Hanafi. Doesn't affect Shia calc usually, but keep default.
-
-     const response = await fetch(apiUrl);
-     const data = await response.json();
-     
-     if (data.code !== 200) {
-        throw new Error(data.status || "Failed to fetch from Aladhan API");
-     }
-
-     // Transform Aladhan data format to our app format
-     const result = data.data.map((day: any) => {
-        const timings = day.timings;
-        
-       const cleanTime = (t: string | undefined) => t ? t.split(' ')[0] : "";
-       const dateStr = day.date.gregorian.date; // "16-02-2026"
-       
-       return {
-         date: dateStr.split('-').reverse().join('-'), // "2026-02-16"
-         hijri: `${day.date.hijri.day} ${day.date.hijri.month.en} ${day.date.hijri.year}`,
-         imsak: cleanTime(timings.Imsak),
-         fajr: cleanTime(timings.Fajr),
-         sunrise: cleanTime(timings.Sunrise),
-         dhuhr: cleanTime(timings.Dhuhr),
-         asr: cleanTime(timings.Asr),
-         maghrib: cleanTime(timings.Maghrib),
-         isha: cleanTime(timings.Isha)
-       };
-     });
-     
-     setCache(cacheKey, result, 30);
-     return result;
-
-  } catch (error) {
-     console.error("Schedule Fetch Error:", error);
-     throw error;
+    console.error("Schedule Fetch Error:", error);
+    throw error;
   }
 }
 
