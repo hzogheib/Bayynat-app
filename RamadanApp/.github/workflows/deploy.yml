@@ -5,7 +5,10 @@ on:
   push:
     branches:
       - master
+<<<<<<< HEAD
   workflow_dispatch:
+=======
+>>>>>>> 3c47caa (Update GitHub Pages deploy workflow for master branch and peaceiris action)
 
 permissions:
   contents: write
