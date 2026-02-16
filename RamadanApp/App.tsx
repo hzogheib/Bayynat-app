@@ -90,33 +90,9 @@ const getCityTimezone = (city: string) => {
 };
 
 const App: React.FC = () => {
-    // State for Iftar timer
-    const [iftarCountdown, setIftarCountdown] = useState<string>("");
+  // ...existing code...
+  // ...existing state declarations...
 
-    // Calculate remaining time for Maghrib (Iftar)
-    useEffect(() => {
-      if (!todaySchedule || !todaySchedule.times.maghrib) {
-        setIftarCountdown("");
-        return;
-      }
-      const updateCountdown = () => {
-        const now = new Date();
-        const [maghribHour, maghribMinute] = todaySchedule.times.maghrib.split(":").map(Number);
-        const maghrib = new Date(now);
-        maghrib.setHours(maghribHour, maghribMinute, 0, 0);
-        let diff = maghrib.getTime() - now.getTime();
-        if (diff < 0) diff = 0;
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        setIftarCountdown(`${hours.toString().padStart(2, '0')}:${minutes
-          .toString()
-          .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-      };
-      updateCountdown();
-      const interval = setInterval(updateCountdown, 1000);
-      return () => clearInterval(interval);
-    }, [todaySchedule, currentTime]);
   const [rememberLocation, setRememberLocation] = useState(false);
   // Only show location modal by default if no saved location
   const [showLocationModal, setShowLocationModal] = useState(() => {
@@ -160,6 +136,32 @@ const App: React.FC = () => {
   const [qiblaBearing, setQiblaBearing] = useState<number>(0);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Iftar timer state and effect (must be after todaySchedule/currentTime declarations)
+  const [iftarCountdown, setIftarCountdown] = useState<string>("");
+  useEffect(() => {
+    if (!todaySchedule || !todaySchedule.times.maghrib) {
+      setIftarCountdown("");
+      return;
+    }
+    const updateCountdown = () => {
+      const now = new Date();
+      const [maghribHour, maghribMinute] = todaySchedule.times.maghrib.split(":").map(Number);
+      const maghrib = new Date(now);
+      maghrib.setHours(maghribHour, maghribMinute, 0, 0);
+      let diff = maghrib.getTime() - now.getTime();
+      if (diff < 0) diff = 0;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      setIftarCountdown(`${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [todaySchedule, currentTime]);
 
   // Calendar View States
   const [calendarType, setCalendarType] = useState<'gregorian' | 'hijri'>('gregorian');
