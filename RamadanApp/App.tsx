@@ -92,6 +92,7 @@ const getCityTimezone = (city: string) => {
 
 const App: React.FC = () => {
 <<<<<<< HEAD
+<<<<<<< HEAD
   // ...existing code...
   // ...existing state declarations...
 
@@ -124,6 +125,11 @@ const App: React.FC = () => {
       return () => clearInterval(interval);
     }, [todaySchedule, currentTime]);
 >>>>>>> a319aff (Add Iftar timer next to today's date)
+=======
+  // ...existing code...
+  // ...existing state declarations...
+
+>>>>>>> dc3232d (Remove API key references for security)
   const [rememberLocation, setRememberLocation] = useState(false);
   // Only show location modal by default if no saved location
   const [showLocationModal, setShowLocationModal] = useState(() => {
@@ -169,14 +175,22 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Iftar timer state and effect (must be after todaySchedule/currentTime declarations)
   const [iftarCountdown, setIftarCountdown] = useState<string>("");
   useEffect(() => {
     if (!todaySchedule || !todaySchedule.times.maghrib || !location) {
+=======
+  // Iftar timer state and effect (must be after todaySchedule/currentTime declarations)
+  const [iftarCountdown, setIftarCountdown] = useState<string>("");
+  useEffect(() => {
+    if (!todaySchedule || !todaySchedule.times.maghrib) {
+>>>>>>> dc3232d (Remove API key references for security)
       setIftarCountdown("");
       return;
     }
     const updateCountdown = () => {
+<<<<<<< HEAD
       // Get timezone for selected location
       const tz = getCityTimezone(location.city);
       // Current time in location's timezone
@@ -191,6 +205,17 @@ const App: React.FC = () => {
       const hours = Math.floor(diff.hours || 0);
       const minutes = Math.floor(diff.minutes || 0);
       const seconds = Math.floor(diff.seconds || 0);
+=======
+      const now = new Date();
+      const [maghribHour, maghribMinute] = todaySchedule.times.maghrib.split(":").map(Number);
+      const maghrib = new Date(now);
+      maghrib.setHours(maghribHour, maghribMinute, 0, 0);
+      let diff = maghrib.getTime() - now.getTime();
+      if (diff < 0) diff = 0;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+>>>>>>> dc3232d (Remove API key references for security)
       setIftarCountdown(`${hours.toString().padStart(2, '0')}:${minutes
         .toString()
         .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
@@ -198,10 +223,15 @@ const App: React.FC = () => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
+<<<<<<< HEAD
   }, [todaySchedule, currentTime, location]);
 
 =======
 >>>>>>> f996080 (Update city selection logic and integrate CountriesNow API for cities)
+=======
+  }, [todaySchedule, currentTime]);
+
+>>>>>>> dc3232d (Remove API key references for security)
   // Calendar View States
   const [calendarType, setCalendarType] = useState<'gregorian' | 'hijri'>('gregorian');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
