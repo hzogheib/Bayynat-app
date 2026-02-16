@@ -28,6 +28,7 @@ import {
 import { PRAYER_NAMES, ATHAN_AUDIO_URL, RAMADAN_DUAS, calculateQiblaBearing } from './constants';
 import { AppLocation, DayInfo, AppView } from './types';
 import { getRamadanInsight, getDetailedSchedule, getCountries, getCities } from './services/geminiService';
+import { RAMADAN_2026_PRAYER_TIMES, RamadanDay } from './ramadanTimes2026';
 import { DateTime } from 'luxon';
 
 const GREGORIAN_MONTHS = [
@@ -89,10 +90,67 @@ const getCityTimezone = (city: string) => {
 };
 
 const App: React.FC = () => {
+    // State for Iftar timer
+    const [iftarCountdown, setIftarCountdown] = useState<string>("");
+
+    // Calculate remaining time for Maghrib (Iftar)
+    useEffect(() => {
+      if (!todaySchedule || !todaySchedule.times.maghrib) {
+        setIftarCountdown("");
+        return;
+      }
+      const updateCountdown = () => {
+        const now = new Date();
+        const [maghribHour, maghribMinute] = todaySchedule.times.maghrib.split(":").map(Number);
+        const maghrib = new Date(now);
+        maghrib.setHours(maghribHour, maghribMinute, 0, 0);
+        let diff = maghrib.getTime() - now.getTime();
+        if (diff < 0) diff = 0;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        setIftarCountdown(`${hours.toString().padStart(2, '0')}:${minutes
+          .toString()
+          .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      };
+      updateCountdown();
+      const interval = setInterval(updateCountdown, 1000);
+      return () => clearInterval(interval);
+    }, [todaySchedule, currentTime]);
+  const [rememberLocation, setRememberLocation] = useState(false);
+  // Only show location modal by default if no saved location
+  const [showLocationModal, setShowLocationModal] = useState(() => {
+    const savedLocation = localStorage.getItem('savedLocation');
+    return !savedLocation;
+  });
+  // On mount, if a saved location exists, set it as the current location and close modal
+  useEffect(() => {
+    const savedLocation = localStorage.getItem('savedLocation');
+    if (savedLocation) {
+      try {
+        const parsed = JSON.parse(savedLocation);
+        if (parsed && parsed.city && parsed.country) {
+          setLocation(parsed);
+          setShowLocationModal(false);
+        }
+      } catch {}
+    }
+  }, []);
   const [location, setLocation] = useState<AppLocation | null>(null);
+  // Use the real current date for all logic and display
+  // Override current date for testing: Feb 4, 2026
+  // Override current date for testing: Feb 23, 2026
   const [currentTime, setCurrentTime] = useState(new Date());
   const [schedule, setSchedule] = useState<DayInfo[]>([]);
   const [todaySchedule, setTodaySchedule] = useState<DayInfo | null>(null);
+  // List of cities that should only show today if in Ramadan
+  const strictRamadanCities = [
+    'Beirut',
+    'Riyadh',
+    'Marseille',
+    'Doha',
+    'Nabatiyeh',
+  ];
   const [insight, setInsight] = useState<string>("");
   const [isAthanEnabled, setIsAthanEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -109,7 +167,15 @@ const App: React.FC = () => {
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(new Date().getMonth());
 
   // Location Selection States
-  const [showLocationModal, setShowLocationModal] = useState(false);
+  useEffect(() => {
+    // Only show modal if no location and no saved location
+    if (!location) {
+      const savedLocation = localStorage.getItem('savedLocation');
+      if (!savedLocation) {
+        setShowLocationModal(true);
+      }
+    }
+  }, [location]);
   const [countries, setCountries] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -200,7 +266,43 @@ const App: React.FC = () => {
     else setCalendarLoading(true);
 
     try {
-      const now = new Date();
+      // Ramadan 2026: Feb 18 (inclusive) to Mar 19 (inclusive)
+      const ramadanStart = new Date('2026-02-18');
+      const ramadanEnd = new Date('2026-03-19');
+      // Use fixed currentTime for all logic
+      const now = currentTime;
+      // If selected date or today's date is in Ramadan, use static timetable ONLY
+      const selectedDate = new Date(`${selectedYear}-0${selectedMonthIdx+1}-01`); // 1st of selected month
+      const isRamadan = (now >= ramadanStart && now <= ramadanEnd) || (selectedDate >= ramadanStart && selectedDate <= ramadanEnd);
+
+      if (isRamadan && RAMADAN_2026_PRAYER_TIMES[location.city]) {
+        const cityTable = RAMADAN_2026_PRAYER_TIMES[location.city];
+        // Map RamadanDay[] to DayInfo[] for compatibility
+        const mappedDays: DayInfo[] = cityTable.days.map((d) => ({
+          date: d.gregorian,
+          hijriDate: d.hijri,
+          times: {
+            imsak: d.imsak,
+            fajr: d.fajr,
+            sunrise: d.sunrise,
+            dhuhr: d.dhuhr,
+            asr: d.asr,
+            maghrib: d.maghrib,
+            ghiyabHumra: d.ghiyab,
+            isha: d.isha,
+          },
+        }));
+        setSchedule(mappedDays);
+        // Use fixed currentTime for today
+        const todayStr = now.toISOString().split('T')[0];
+        let todayScheduleToSet = mappedDays.find(d => d.date === todayStr) || mappedDays[0];
+        setTodaySchedule(todayScheduleToSet);
+        setLoading(false);
+        setCalendarLoading(false);
+        return;
+      }
+
+      // Otherwise, use the original dynamic source
       const targetMonth = selectedMonthIdx + 1;
       const targetYear = selectedYear;
       const hijriMonthParam = calendarType === 'hijri' ? HIJRI_MONTHS[selectedMonthIdx] : undefined;
@@ -285,24 +387,14 @@ const App: React.FC = () => {
     }
   }, [showLocationModal]);
 
+  // Restore timer to use the real current date
+  // Restore timer to update currentTime every second
   useEffect(() => {
     const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentTime(now);
-
-      if (isAthanEnabled && todaySchedule) {
-        const currentHM = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-        const maghribTime = todaySchedule.times.maghrib;
-
-        if (currentHM === maghribTime && lastAthanTriggeredRef.current !== currentHM) {
-          athanAudioRef.current?.play().catch(console.error);
-          lastAthanTriggeredRef.current = currentHM;
-        }
-      }
+      setCurrentTime(new Date());
     }, 1000);
-
     return () => clearInterval(timer);
-  }, [todaySchedule, isAthanEnabled]);
+  }, []);
 
   const filteredCountries = useMemo(() => {
     return countries.filter(c => c.toLowerCase().includes(locationSearch.toLowerCase()));
@@ -327,25 +419,58 @@ const App: React.FC = () => {
   };
 
   const handleCitySelect = (city: string) => {
-    setLocation({ city, country: selectedCountry });
+    const loc = { city, country: selectedCountry };
+    setLocation(loc);
     setShowLocationModal(false);
     setSelectedCountry("");
     setCities([]);
     setLocationSearch("");
+    if (rememberLocation) {
+      localStorage.setItem('savedLocation', JSON.stringify(loc));
+    } else {
+      localStorage.removeItem('savedLocation');
+    }
+  };
+
+  // Helper to convert "HH:mm" to minutes since midnight
+  const timeToMinutes = (timeStr: string) => {
+    if (!timeStr) return -1;
+    const [h, m] = timeStr.split(":").map(Number);
+    return h * 60 + m;
   };
 
   const getNextPrayer = useCallback(() => {
     if (!todaySchedule) return null;
-    const nowStr = currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    const now = currentTime;
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
     const keys = ['imsak', 'fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'ghiyabHumra', 'isha'] as const;
-    
+    let found = null;
     for (const key of keys) {
-      if (todaySchedule.times[key] > nowStr) {
-        return { name: PRAYER_NAMES[key].en, time: todaySchedule.times[key] };
+      const prayerTime = todaySchedule.times[key];
+      if (!prayerTime) continue;
+      const prayerMinutes = timeToMinutes(prayerTime);
+      if (prayerMinutes > nowMinutes) {
+        found = { name: PRAYER_NAMES[key].en, time: prayerTime };
+        break;
       }
     }
-    return { name: PRAYER_NAMES.imsak.en, time: todaySchedule.times.imsak };
-  }, [todaySchedule, currentTime]);
+    if (!found) {
+      // Try to get the first prayer of tomorrow if available
+      if (schedule && schedule.length > 0) {
+        const todayIdx = schedule.findIndex(d => d.date === todaySchedule.date);
+        if (todayIdx !== -1 && todayIdx < schedule.length - 1) {
+          const tomorrow = schedule[todayIdx + 1];
+          const firstPrayerKey = keys.find(k => tomorrow.times[k]);
+          if (firstPrayerKey) {
+            return { name: PRAYER_NAMES[firstPrayerKey].en, time: tomorrow.times[firstPrayerKey] };
+          }
+        }
+      }
+      // Fallback to Imsak
+      found = { name: PRAYER_NAMES.imsak.en, time: todaySchedule.times.imsak };
+    }
+    return found;
+  }, [todaySchedule, currentTime, schedule]);
 
   const nextPrayer = getNextPrayer();
 
@@ -364,6 +489,15 @@ const App: React.FC = () => {
   const formattedGregorianDate = useMemo(() => {
     return currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }, [currentTime]);
+
+  // Align hijri date to real Gregorian date (for display)
+  const alignedHijriDate = useMemo(() => {
+    if (!schedule || schedule.length === 0) return '';
+    // Find the DayInfo that matches the real current date
+    const todayStr = currentTime.toISOString().split('T')[0];
+    const match = schedule.find(d => d.date === todayStr);
+    return match ? match.hijriDate : (todaySchedule?.hijriDate || '');
+  }, [schedule, todaySchedule, currentTime]);
 
   const handlePrevMonth = () => {
     setSelectedMonthIdx(prev => (prev === 0 ? 11 : prev - 1));
@@ -396,7 +530,14 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 max-w-md mx-auto flex flex-col relative shadow-2xl safe-top">
       {/* Header */}
-      <header className="bg-[#006837] pt-8 pb-10 px-6 rounded-b-[3rem] shadow-2xl relative z-20">
+      <header className="bg-[#006837] pt-4 pb-10 px-6 rounded-b-[3rem] shadow-2xl relative z-20">
+        {/* Iftar Timer */}
+        {iftarCountdown && (
+          <div className="flex flex-col items-center justify-center mb-4">
+            <span className="text-xs font-bold text-[#c5a021] uppercase tracking-widest">Time for Iftar</span>
+            <span className="text-3xl font-black text-white drop-shadow-lg font-mono">{iftarCountdown}</span>
+          </div>
+        )}
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <Moon size={120} className="text-white" />
         </div>
@@ -425,9 +566,17 @@ const App: React.FC = () => {
               <CalendarDays size={16} />
               <p className="text-[10px] font-black uppercase tracking-widest">Today's Date</p>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-black text-slate-800">{todaySchedule?.hijriDate || '...'}</span>
-              <span className="text-[11px] font-medium text-slate-400">{formattedGregorianDate}</span>
+            <div className="flex flex-row items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-sm font-black text-slate-800">{alignedHijriDate || '...'}</span>
+                <span className="text-[11px] font-medium text-slate-400">{formattedGregorianDate}</span>
+              </div>
+              {iftarCountdown && (
+                <div className="flex flex-col items-end ml-4">
+                  <span className="text-[10px] font-bold text-[#c5a021] uppercase tracking-widest">Time for Iftar</span>
+                  <span className="text-xl font-black text-[#006837] drop-shadow-lg font-mono">{iftarCountdown}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -510,37 +659,11 @@ const App: React.FC = () => {
         {view === 'calendar' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-6 bg-white p-4 rounded-[2rem] shadow-md border border-slate-100">
-               <div className="flex items-center justify-between mb-4">
-                  <div className="flex bg-slate-50 p-1 rounded-2xl w-full">
-                     <button 
-                        onClick={() => setCalendarType('gregorian')}
-                        className={`flex-1 py-2 text-[10px] font-black uppercase rounded-xl transition-all ${calendarType === 'gregorian' ? 'bg-[#006837] text-white shadow-md' : 'text-slate-400'}`}
-                     >
-                        Gregorian
-                     </button>
-                     <button 
-                        onClick={() => setCalendarType('hijri')}
-                        className={`flex-1 py-2 text-[10px] font-black uppercase rounded-xl transition-all ${calendarType === 'hijri' ? 'bg-[#c5a021] text-white shadow-md' : 'text-slate-400'}`}
-                     >
-                        Hijri
-                     </button>
-                  </div>
-               </div>
-
-               <div className="flex items-center justify-between px-2">
-                  <button onClick={handlePrevMonth} className="p-2 bg-slate-50 rounded-full hover:bg-slate-100 text-[#006837]">
-                     <ChevronLeft size={20} />
-                  </button>
-                  <div className="text-center">
-                     <p className="font-black text-slate-800">
-                        {calendarType === 'gregorian' ? GREGORIAN_MONTHS[selectedMonthIdx] : HIJRI_MONTHS[selectedMonthIdx]}
-                     </p>
-                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedYear}</p>
-                  </div>
-                  <button onClick={handleNextMonth} className="p-2 bg-slate-50 rounded-full hover:bg-slate-100 text-[#006837]">
-                     <ChevronRight size={20} />
-                  </button>
-               </div>
+              <div className="flex items-center justify-center mb-2">
+                <span className="mx-4 text-xl font-bold">
+                  Ramadan 2026
+                </span>
+              </div>
             </div>
 
             <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xl mb-4 relative min-h-[400px]">
@@ -554,35 +677,50 @@ const App: React.FC = () => {
                 <thead className="bg-slate-50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-100">
                   <tr>
                     <th className="p-4">Date</th>
+                    <th className="p-4 text-[#006837]">Imsak</th>
                     <th className="p-4 text-[#006837]">Fajr</th>
-                    <th className="p-4 text-[#c5a021]">Iftar</th>
+                    <th className="p-4 text-[#c5a021]">Maghrib</th>
+                    <th className="p-4 text-[#c5a021]">Ghiyab Al-Homra</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {schedule.length > 0 ? schedule.map((day, idx) => {
-                    const isToday = day.date.includes(currentTime.toISOString().split('T')[0]);
-                    return (
-                      <tr key={idx} className={`${isToday ? 'bg-[#006837]/5' : ''} hover:bg-slate-50/50 transition-colors`}>
-                        <td className="p-4">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-800">{day.hijriDate.split(' ')[0]} {day.hijriDate.split(' ')[1]}</span>
-                            <span className="text-[10px] text-slate-400 font-medium">
-                              {new Date(day.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-4 text-[#006837] font-black font-mono">{day.times.fajr}</td>
-                        <td className="p-4 text-[#c5a021] font-black font-mono">{day.times.maghrib}</td>
-                      </tr>
+                  {/* Show only Ramadan days for selected city */}
+                  {(() => {
+                    const cityKey = Object.keys(RAMADAN_2026_PRAYER_TIMES).find(
+                      k => k.toLowerCase() === (location?.city || '').toLowerCase()
                     );
-                  }) : (
-                    <tr>
-                      <td colSpan={3} className="p-12 text-center text-slate-400">
-                        <AlertCircle className="mx-auto mb-2 opacity-20" size={40} />
-                        <p className="text-xs font-bold uppercase tracking-widest">No schedule found</p>
-                      </td>
-                    </tr>
-                  )}
+                    const ramadanDays = cityKey ? RAMADAN_2026_PRAYER_TIMES[cityKey].days : [];
+                    if (ramadanDays.length > 0) {
+                      return ramadanDays.map((day, idx) => {
+                        const isToday = day.gregorian === currentTime.toISOString().split('T')[0];
+                        return (
+                          <tr key={idx} className={`${isToday ? 'bg-[#006837]/5' : ''} hover:bg-slate-50/50 transition-colors`}>
+                            <td className="p-4">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-800">{day.hijri.split(' ')[0]} {day.hijri.split(' ')[1]}</span>
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  {new Date(day.gregorian).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-[#006837] font-black font-mono">{day.imsak}</td>
+                            <td className="p-4 text-[#006837] font-black font-mono">{day.fajr}</td>
+                            <td className="p-4 text-[#c5a021] font-black font-mono">{day.maghrib}</td>
+                            <td className="p-4 text-[#c5a021] font-black font-mono">{day.ghiyab}</td>
+                          </tr>
+                        );
+                      });
+                    } else {
+                      return (
+                        <tr>
+                          <td colSpan={5} className="p-12 text-center text-slate-400">
+                            <AlertCircle className="mx-auto mb-2 opacity-20" size={40} />
+                            <p className="text-xs font-bold uppercase tracking-widest">No schedule found</p>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -713,6 +851,19 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 pb-8">
+              {/* Remember my choice checkbox */}
+              <div className="flex items-center mb-4">
+                <input
+                  id="remember-location"
+                  type="checkbox"
+                  className="mr-2 accent-[#006837]"
+                  checked={rememberLocation}
+                  onChange={e => setRememberLocation(e.target.checked)}
+                />
+                <label htmlFor="remember-location" className="text-sm text-slate-700 font-medium select-none">
+                  Remember my choice
+                </label>
+              </div>
               {locationLoading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <Loader2 className="animate-spin text-[#c5a021] mb-2" size={32} />

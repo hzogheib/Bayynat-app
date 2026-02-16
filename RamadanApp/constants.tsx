@@ -10,7 +10,7 @@ export const PRAYER_NAMES: Record<string, { en: string; ar: string }> = {
   sunrise: { en: "Sunrise", ar: "الشروق" },
   dhuhr: { en: "Dhuhr", ar: "الظهر" },
   asr: { en: "Asr", ar: "العصر" },
-  maghrib: { en: "Iftar / Maghrib", ar: "المغرب" },
+  maghrib: { en: "Maghrib", ar: "المغرب" },
   ghiyabHumra: { en: "Ghiyab Al-Humra", ar: "غياب الحمرة" },
   isha: { en: "Isha", ar: "العشاء" },
 };

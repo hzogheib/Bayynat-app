@@ -179,90 +179,35 @@ export async function getDetailedSchedule(city: string, year: number, month: num
 }
 
 export async function getCountries() {
-  const cacheKey = 'countries_list_full';
-  const cached = getCache(cacheKey);
-  if (cached) return cached;
-
-  /*
-  try {
-    const result = await fetchWithRetry(async () => {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: "Return a JSON list of all sovereign countries in the world, sorted alphabetically. Format: array of strings."
-              }
-            ]
-          }
-        ],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          }
-        }
-      });
-      return JSON.parse(response.text);
-    });
-    setCache(cacheKey, result, 60); // Cache countries for 60 days
-    return result;
-  } catch (error) {
-    console.error("Gemini Countries Error:", error);
-    return ["Lebanon", "Iraq", "Iran", "Kuwait", "Saudi Arabia", "United Arab Emirates", "United Kingdom", "USA", "Canada", "Australia", "Germany", "France"];
-  }
-  */
-  
-  // Fetch all countries from a public API
-  try {
-    const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
-    const data = await response.json();
-    const countries = data.map((c: any) => c.name.common).sort();
-    setCache(cacheKey, countries, 60);
-    return countries;
-  } catch (error) {
-    console.warn("Failed to fetch countries API", error);
-    // Fallback static list
-    const fallbackCountries = [
-      "Afghanistan", "Albania", "Algeria", "Argentina", "Australia", "Austria", "Bahrain", "Bangladesh", "Belgium", "Brazil",
-      "Canada", "China", "Denmark", "Egypt", "Finland", "France", "Germany", "Greece", "India", "Indonesia", "Iran", "Iraq",
-      "Ireland", "Italy", "Japan", "Jordan", "Kuwait", "Lebanon", "Libya", "Malaysia", "Mexico", "Morocco", "Netherlands",
-      "New Zealand", "Norway", "Oman", "Pakistan", "Palestine", "Philippines", "Portugal", "Qatar", "Russia", "Saudi Arabia",
-      "Singapore", "South Africa", "South Korea", "Spain", "Sweden", "Switzerland", "Syria", "Tunisia", "Turkey", "Ukraine",
-      "United Arab Emirates", "United Kingdom", "United States", "Yemen"
-    ];
-    return fallbackCountries;
-  }
+  // Only return the allowed countries
+  return [
+    "France",
+    "Gambia",
+    "Lebanon",
+    "Qatar",
+    "Saudi Arabia",
+    "United Arab Emirates"
+  ];
 }
 
 export async function getCities(country: string) {
   const cacheKey = `cities_${country.toLowerCase().replace(/\s/g, '_')}`;
   // Static map of major cities for reliability
+  // Only allow specific cities for each allowed country
   const majorCities: Record<string, string[]> = {
-    'lebanon': ["Beirut", "Tripoli", "Sidon", "Tyre", "Baalbek", "Zahle", "Nabatieh"],
-    'france': ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille"],
-    'united states': ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"],
-    'united kingdom': ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Sheffield", "Bristol", "Edinburgh", "Leicester"],
-    'germany': ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"],
-    'egypt': ["Cairo", "Alexandria", "Giza", "Shubra El Kheima", "Port Said", "Suez", "Luxor", "Aswan", "Tanta", "Mansoura"],
-    'turkey': ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Gaziantep", "Konya", "Antalya", "Kayseri", "Mersin"],
-    'iraq': ["Baghdad", "Basra", "Mosul", "Erbil", "Najaf", "Karbala", "Sulaymaniyah", "Kirkuk", "Diwaniya", "Nasiriyah"],
-    'iran': ["Tehran", "Mashhad", "Isfahan", "Karaj", "Shiraz", "Tabriz", "Qom", "Ahvaz", "Kermanshah", "Urmia"],
-    'saudi arabia': ["Riyadh", "Jeddah", "Mecca", "Medina", "Dammam", "Khobar", "Tabuk", "Buraidah", "Abha", "Hail"],
-    'pakistan': ["Karachi", "Lahore", "Faisalabad", "Rawalpindi", "Multan", "Peshawar", "Islamabad", "Quetta", "Sialkot", "Gujranwala"],
-    'india': ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat", "Pune", "Jaipur"],
-    'canada': ["Toronto", "Montreal", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Winnipeg", "Quebec City", "Hamilton", "Kitchener"],
-    'australia': ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Canberra", "Newcastle", "Wollongong", "Logan City"],
-    // Add more as needed
+    'france': ["Marseille", "Paris"],
+    'gambia': ["Banjul"],
+    'lebanon': ["Beirut", "Nabatiyeh"],
+    'qatar': ["Doha"],
+    'saudi arabia': ["Riyadh"],
+    'united arab emirates': ["Dubai", "Sharjah"]
   };
+  // Always return major cities for allowed countries, ignore cache/API
   const key = country.toLowerCase();
-  // Always return major cities for France, ignore cache/API
-  if (key === 'france') {
-    return majorCities['france'];
+  if (majorCities[key]) {
+    return majorCities[key].sort();
   }
+  return [];
   // Try CountriesNow API for city list
   try {
     const response = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {
