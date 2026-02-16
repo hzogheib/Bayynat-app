@@ -58,6 +58,8 @@ export const RAMADAN_2026_PRAYER_TIMES: Record<string, RamadanCityTable> = {
     ]
   },
 
+=======
+>>>>>>> a319aff (Add Iftar timer next to today's date)
   "Paris": {
     city: "Paris",
     days: [

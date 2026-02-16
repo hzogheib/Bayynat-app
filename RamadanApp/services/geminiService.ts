@@ -116,7 +116,6 @@ export async function getDetailedSchedule(city: string, year: number, month: num
   const cacheKey = `schedule_${city.toLowerCase().replace(/\s/g, '_')}_${year}_${month}_${hijriMonth || 'greg'}`;
   // Only clear cache if explicitly needed (not every call)
   // localStorage.removeItem('bayynat_v2_' + cacheKey);
-  localStorage.removeItem('bayynat_v2_' + cacheKey);
 >>>>>>> 3fc9f39 (Automatically clear schedule cache for new city selection)
 =======
   // Only clear cache if explicitly needed (not every call)
@@ -254,6 +253,7 @@ export async function getDetailedSchedule(city: string, year: number, month: num
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   try {
      const cleanCity = city.split(',')[0].trim();
@@ -328,32 +328,39 @@ export async function getDetailedSchedule(city: string, year: number, month: num
   if (cached) return cached;
 
 =======
+=======
+export async function getCountries() {
+  // Only return the allowed countries
+  return [
+    "France",
+    "Gambia",
+    "Lebanon",
+    "Qatar",
+    "Saudi Arabia",
+    "United Arab Emirates"
+  ];
+}
+
+>>>>>>> a319aff (Add Iftar timer next to today's date)
 export async function getCities(country: string) {
   const cacheKey = `cities_${country.toLowerCase().replace(/\s/g, '_')}`;
 >>>>>>> f996080 (Update city selection logic and integrate CountriesNow API for cities)
   // Static map of major cities for reliability
+  // Only allow specific cities for each allowed country
   const majorCities: Record<string, string[]> = {
-    'lebanon': ["Beirut", "Tripoli", "Sidon", "Tyre", "Baalbek", "Zahle", "Nabatieh"],
-    'france': ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille"],
-    'united states': ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"],
-    'united kingdom': ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Sheffield", "Bristol", "Edinburgh", "Leicester"],
-    'germany': ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"],
-    'egypt': ["Cairo", "Alexandria", "Giza", "Shubra El Kheima", "Port Said", "Suez", "Luxor", "Aswan", "Tanta", "Mansoura"],
-    'turkey': ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Gaziantep", "Konya", "Antalya", "Kayseri", "Mersin"],
-    'iraq': ["Baghdad", "Basra", "Mosul", "Erbil", "Najaf", "Karbala", "Sulaymaniyah", "Kirkuk", "Diwaniya", "Nasiriyah"],
-    'iran': ["Tehran", "Mashhad", "Isfahan", "Karaj", "Shiraz", "Tabriz", "Qom", "Ahvaz", "Kermanshah", "Urmia"],
-    'saudi arabia': ["Riyadh", "Jeddah", "Mecca", "Medina", "Dammam", "Khobar", "Tabuk", "Buraidah", "Abha", "Hail"],
-    'pakistan': ["Karachi", "Lahore", "Faisalabad", "Rawalpindi", "Multan", "Peshawar", "Islamabad", "Quetta", "Sialkot", "Gujranwala"],
-    'india': ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat", "Pune", "Jaipur"],
-    'canada': ["Toronto", "Montreal", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Winnipeg", "Quebec City", "Hamilton", "Kitchener"],
-    'australia': ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Canberra", "Newcastle", "Wollongong", "Logan City"],
-    // Add more as needed
+    'france': ["Marseille", "Paris"],
+    'gambia': ["Banjul"],
+    'lebanon': ["Beirut", "Nabatiyeh"],
+    'qatar': ["Doha"],
+    'saudi arabia': ["Riyadh"],
+    'united arab emirates': ["Dubai", "Sharjah"]
   };
+  // Always return major cities for allowed countries, ignore cache/API
   const key = country.toLowerCase();
-  // Always return major cities for France, ignore cache/API
-  if (key === 'france') {
-    return majorCities['france'];
+  if (majorCities[key]) {
+    return majorCities[key].sort();
   }
+  return [];
   // Try CountriesNow API for city list
   try {
     const response = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {

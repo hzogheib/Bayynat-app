@@ -28,7 +28,7 @@ import {
 import { PRAYER_NAMES, ATHAN_AUDIO_URL, RAMADAN_DUAS, calculateQiblaBearing } from './constants';
 import { AppLocation, DayInfo, AppView } from './types';
 import { getRamadanInsight, getDetailedSchedule, getCountries, getCities } from './services/geminiService';
->>>>>>> 4062888 (Show city time using luxon when city is selected; keep API for prayer times)
+import { RAMADAN_2026_PRAYER_TIMES, RamadanDay } from './ramadanTimes2026';
 import { DateTime } from 'luxon';
 
 const GREGORIAN_MONTHS = [
@@ -91,9 +91,39 @@ const getCityTimezone = (city: string) => {
 };
 
 const App: React.FC = () => {
+<<<<<<< HEAD
   // ...existing code...
   // ...existing state declarations...
 
+=======
+    // State for Iftar timer
+    const [iftarCountdown, setIftarCountdown] = useState<string>("");
+
+    // Calculate remaining time for Maghrib (Iftar)
+    useEffect(() => {
+      if (!todaySchedule || !todaySchedule.times.maghrib) {
+        setIftarCountdown("");
+        return;
+      }
+      const updateCountdown = () => {
+        const now = new Date();
+        const [maghribHour, maghribMinute] = todaySchedule.times.maghrib.split(":").map(Number);
+        const maghrib = new Date(now);
+        maghrib.setHours(maghribHour, maghribMinute, 0, 0);
+        let diff = maghrib.getTime() - now.getTime();
+        if (diff < 0) diff = 0;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        setIftarCountdown(`${hours.toString().padStart(2, '0')}:${minutes
+          .toString()
+          .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      };
+      updateCountdown();
+      const interval = setInterval(updateCountdown, 1000);
+      return () => clearInterval(interval);
+    }, [todaySchedule, currentTime]);
+>>>>>>> a319aff (Add Iftar timer next to today's date)
   const [rememberLocation, setRememberLocation] = useState(false);
   // Only show location modal by default if no saved location
   const [showLocationModal, setShowLocationModal] = useState(() => {
@@ -451,18 +481,29 @@ const App: React.FC = () => {
   };
 
   const getNextPrayer = useCallback(() => {
+<<<<<<< HEAD
     if (!todaySchedule || !location) return null;
     // Use selected city's local time
     const tz = getCityTimezone(location.city);
     const now = DateTime.now().setZone(tz);
     const nowMinutes = now.hour * 60 + now.minute;
     const keys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+=======
+    if (!todaySchedule) return null;
+    const now = currentTime;
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const keys = ['imsak', 'fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'ghiyabHumra', 'isha'] as const;
+>>>>>>> a319aff (Add Iftar timer next to today's date)
     let found = null;
     for (const key of keys) {
       const prayerTime = todaySchedule.times[key];
       if (!prayerTime) continue;
+<<<<<<< HEAD
       const [h, m] = prayerTime.split(":").map(Number);
       const prayerMinutes = h * 60 + m;
+=======
+      const prayerMinutes = timeToMinutes(prayerTime);
+>>>>>>> a319aff (Add Iftar timer next to today's date)
       if (prayerMinutes > nowMinutes) {
         found = { name: PRAYER_NAMES[key].en, time: prayerTime };
         break;
@@ -484,7 +525,11 @@ const App: React.FC = () => {
       found = { name: PRAYER_NAMES.imsak.en, time: todaySchedule.times.imsak };
     }
     return found;
+<<<<<<< HEAD
   }, [todaySchedule, schedule, location]);
+=======
+  }, [todaySchedule, currentTime, schedule]);
+>>>>>>> a319aff (Add Iftar timer next to today's date)
 
   const nextPrayer = getNextPrayer();
 
@@ -549,9 +594,13 @@ const App: React.FC = () => {
         {iftarCountdown && (
           <div className="flex flex-col items-center justify-center mb-4">
             <span className="text-xs font-bold text-[#c5a021] uppercase tracking-widest">Time for Iftar</span>
+<<<<<<< HEAD
             <span className="text-3xl font-black text-white drop-shadow-lg font-mono">
               {iftarCountdown === '00:00:00' || iftarCountdown === '0' ? 'افطارا شهيا' : iftarCountdown}
             </span>
+=======
+            <span className="text-3xl font-black text-white drop-shadow-lg font-mono">{iftarCountdown}</span>
+>>>>>>> a319aff (Add Iftar timer next to today's date)
           </div>
         )}
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -587,6 +636,22 @@ const App: React.FC = () => {
                 <span className="text-[11px] font-medium text-slate-400">{formattedGregorianDate}</span>
               </div>
             </div>
+<<<<<<< HEAD
+=======
+            <div className="flex flex-row items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-sm font-black text-slate-800">{alignedHijriDate || '...'}</span>
+                <span className="text-[11px] font-medium text-slate-400">{formattedGregorianDate}</span>
+              </div>
+              {iftarCountdown && (
+                <div className="flex flex-col items-end ml-4">
+                  <span className="text-[10px] font-bold text-[#c5a021] uppercase tracking-widest">Time for Iftar</span>
+                  <span className="text-xl font-black text-[#006837] drop-shadow-lg font-mono">{iftarCountdown}</span>
+                </div>
+              )}
+            </div>
+          </div>
+>>>>>>> a319aff (Add Iftar timer next to today's date)
 
           <div className="flex justify-between items-start mb-4">
             <div>
