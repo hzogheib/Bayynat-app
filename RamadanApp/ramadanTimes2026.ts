@@ -19,6 +19,41 @@ export interface RamadanDay {
 export type RamadanCityTable = {
   city: string;
   days: RamadanDay[];
+  "Aix-en-Provence": {
+    city: "Aix-en-Provence",
+    days: [
+      { midnight: "0:06", isha: "19:48", ghiyab: "18:28", maghrib: "18:18", asr: "15:45", dhuhr: "12:52", sunrise: "7:30", fajr: "5:57", imsak: "5:47", hijri: "1 Ramadan 1447", gregorian: "2026-02-18", day: "Wednesday" },
+      { midnight: "0:05", isha: "19:49", ghiyab: "18:29", maghrib: "18:19", asr: "15:46", dhuhr: "12:52", sunrise: "7:28", fajr: "5:55", imsak: "5:45", hijri: "2 Ramadan 1447", gregorian: "2026-02-19", day: "Thursday" },
+      { midnight: "0:06", isha: "19:51", ghiyab: "18:31", maghrib: "18:21", asr: "15:47", dhuhr: "12:52", sunrise: "7:27", fajr: "5:54", imsak: "5:44", hijri: "3 Ramadan 1447", gregorian: "2026-02-20", day: "Friday" },
+      { midnight: "0:05", isha: "19:52", ghiyab: "18:32", maghrib: "18:22", asr: "15:48", dhuhr: "12:52", sunrise: "7:25", fajr: "5:52", imsak: "5:42", hijri: "4 Ramadan 1447", gregorian: "2026-02-21", day: "Saturday" },
+      { midnight: "0:05", isha: "19:53", ghiyab: "18:33", maghrib: "18:23", asr: "15:49", dhuhr: "12:52", sunrise: "7:24", fajr: "5:51", imsak: "5:41", hijri: "5 Ramadan 1447", gregorian: "2026-02-22", day: "Sunday" },
+      { midnight: "0:05", isha: "19:54", ghiyab: "18:35", maghrib: "18:25", asr: "15:50", dhuhr: "12:52", sunrise: "7:22", fajr: "5:49", imsak: "5:39", hijri: "6 Ramadan 1447", gregorian: "2026-02-23", day: "Monday" },
+      { midnight: "0:05", isha: "19:56", ghiyab: "18:36", maghrib: "18:26", asr: "15:51", dhuhr: "12:51", sunrise: "7:20", fajr: "5:48", imsak: "5:38", hijri: "7 Ramadan 1447", gregorian: "2026-02-24", day: "Tuesday" },
+      { midnight: "0:05", isha: "19:57", ghiyab: "18:37", maghrib: "18:27", asr: "15:52", dhuhr: "12:51", sunrise: "7:19", fajr: "5:46", imsak: "5:36", hijri: "8 Ramadan 1447", gregorian: "2026-02-25", day: "Wednesday" },
+      { midnight: "0:05", isha: "19:58", ghiyab: "18:39", maghrib: "18:29", asr: "15:52", dhuhr: "12:51", sunrise: "7:17", fajr: "5:45", imsak: "5:35", hijri: "9 Ramadan 1447", gregorian: "2026-02-26", day: "Thursday" },
+      { midnight: "0:05", isha: "19:59", ghiyab: "18:40", maghrib: "18:30", asr: "15:53", dhuhr: "12:51", sunrise: "7:16", fajr: "5:43", imsak: "5:33", hijri: "10 Ramadan 1447", gregorian: "2026-02-27", day: "Friday" },
+      { midnight: "0:05", isha: "20:01", ghiyab: "18:41", maghrib: "18:31", asr: "15:54", dhuhr: "12:51", sunrise: "7:14", fajr: "5:42", imsak: "5:32", hijri: "11 Ramadan 1447", gregorian: "2026-02-28", day: "Saturday" },
+      { midnight: "0:04", isha: "20:02", ghiyab: "18:42", maghrib: "18:32", asr: "15:55", dhuhr: "12:51", sunrise: "7:12", fajr: "5:40", imsak: "5:30", hijri: "12 Ramadan 1447", gregorian: "2026-03-01", day: "Sunday" },
+      { midnight: "0:04", isha: "20:03", ghiyab: "18:44", maghrib: "18:34", asr: "15:56", dhuhr: "12:50", sunrise: "7:11", fajr: "5:38", imsak: "5:28", hijri: "13 Ramadan 1447", gregorian: "2026-03-02", day: "Monday" },
+      { midnight: "0:04", isha: "20:04", ghiyab: "18:45", maghrib: "18:35", asr: "15:57", dhuhr: "12:50", sunrise: "7:09", fajr: "5:37", imsak: "5:27", hijri: "14 Ramadan 1447", gregorian: "2026-03-03", day: "Tuesday" },
+      { midnight: "0:04", isha: "20:06", ghiyab: "18:46", maghrib: "18:36", asr: "15:58", dhuhr: "12:50", sunrise: "7:07", fajr: "5:35", imsak: "5:25", hijri: "15 Ramadan 1447", gregorian: "2026-03-04", day: "Wednesday" },
+      { midnight: "0:04", isha: "20:07", ghiyab: "18:48", maghrib: "18:38", asr: "15:59", dhuhr: "12:50", sunrise: "7:06", fajr: "5:33", imsak: "5:23", hijri: "16 Ramadan 1447", gregorian: "2026-03-05", day: "Thursday" },
+      { midnight: "0:03", isha: "20:08", ghiyab: "18:49", maghrib: "18:39", asr: "15:59", dhuhr: "12:49", sunrise: "7:04", fajr: "5:31", imsak: "5:21", hijri: "17 Ramadan 1447", gregorian: "2026-03-06", day: "Friday" },
+      { midnight: "0:03", isha: "20:10", ghiyab: "18:50", maghrib: "18:40", asr: "16:00", dhuhr: "12:49", sunrise: "7:02", fajr: "5:30", imsak: "5:20", hijri: "18 Ramadan 1447", gregorian: "2026-03-07", day: "Saturday" },
+      { midnight: "0:03", isha: "20:11", ghiyab: "18:51", maghrib: "18:41", asr: "16:01", dhuhr: "12:49", sunrise: "7:00", fajr: "5:28", imsak: "5:18", hijri: "19 Ramadan 1447", gregorian: "2026-03-08", day: "Sunday" },
+      { midnight: "0:03", isha: "20:12", ghiyab: "18:53", maghrib: "18:43", asr: "16:02", dhuhr: "12:49", sunrise: "6:59", fajr: "5:26", imsak: "5:16", hijri: "20 Ramadan 1447", gregorian: "2026-03-09", day: "Monday" },
+      { midnight: "0:02", isha: "20:13", ghiyab: "18:54", maghrib: "18:44", asr: "16:03", dhuhr: "12:48", sunrise: "6:57", fajr: "5:24", imsak: "5:14", hijri: "21 Ramadan 1447", gregorian: "2026-03-10", day: "Tuesday" },
+      { midnight: "0:02", isha: "20:15", ghiyab: "18:55", maghrib: "18:45", asr: "16:03", dhuhr: "12:48", sunrise: "6:55", fajr: "5:23", imsak: "5:13", hijri: "22 Ramadan 1447", gregorian: "2026-03-11", day: "Wednesday" },
+      { midnight: "0:02", isha: "20:16", ghiyab: "18:56", maghrib: "18:46", asr: "16:04", dhuhr: "12:48", sunrise: "6:53", fajr: "5:21", imsak: "5:11", hijri: "23 Ramadan 1447", gregorian: "2026-03-12", day: "Thursday" },
+      { midnight: "0:01", isha: "20:17", ghiyab: "18:57", maghrib: "18:47", asr: "16:05", dhuhr: "12:48", sunrise: "6:52", fajr: "5:19", imsak: "5:09", hijri: "24 Ramadan 1447", gregorian: "2026-03-13", day: "Friday" },
+      { midnight: "0:01", isha: "20:19", ghiyab: "18:59", maghrib: "18:49", asr: "16:05", dhuhr: "12:47", sunrise: "6:50", fajr: "5:17", imsak: "5:07", hijri: "25 Ramadan 1447", gregorian: "2026-03-14", day: "Saturday" },
+      { midnight: "0:01", isha: "20:20", ghiyab: "19:00", maghrib: "18:50", asr: "16:06", dhuhr: "12:47", sunrise: "6:48", fajr: "5:15", imsak: "5:05", hijri: "26 Ramadan 1447", gregorian: "2026-03-15", day: "Sunday" },
+      { midnight: "0:00", isha: "20:21", ghiyab: "19:01", maghrib: "18:51", asr: "16:07", dhuhr: "12:47", sunrise: "6:46", fajr: "5:13", imsak: "5:03", hijri: "27 Ramadan 1447", gregorian: "2026-03-16", day: "Monday" },
+      { midnight: "0:00", isha: "20:23", ghiyab: "19:02", maghrib: "18:52", asr: "16:08", dhuhr: "12:47", sunrise: "6:45", fajr: "5:11", imsak: "5:01", hijri: "28 Ramadan 1447", gregorian: "2026-03-17", day: "Tuesday" },
+      { midnight: "0:00", isha: "20:24", ghiyab: "19:04", maghrib: "18:54", asr: "16:08", dhuhr: "12:46", sunrise: "6:43", fajr: "5:09", imsak: "4:59", hijri: "29 Ramadan 1447", gregorian: "2026-03-18", day: "Wednesday" },
+      { midnight: "0:00", isha: "20:25", ghiyab: "19:05", maghrib: "18:55", asr: "16:09", dhuhr: "12:46", sunrise: "6:41", fajr: "5:08", imsak: "4:58", hijri: "30 Ramadan 1447", gregorian: "2026-03-19", day: "Thursday" }
+    ]
+  },
 };
 
 export const RAMADAN_2026_PRAYER_TIMES: Record<string, RamadanCityTable> = {

@@ -299,6 +299,7 @@
 0:00,20:23,19:02,18:52,16:08,12:47,6:45,5:11,5:01,28 Ramadan 1447,2026­03­17,Tuesday,Aix-en-Provence
 0:00,20:24,19:04,18:54,16:08,12:46,6:43,5:09,4:59,29 Ramadan 1447,2026­03­18,Wednesday,Aix-en-Provence
 0:00,20:25,19:05,18:55,16:09,12:46,6:41,5:08,4:58,30 Ramadan 1447,2026­03­19,Thursday,Aix-en-Provence
+<<<<<<< HEAD
 =======
 Midnight,Isha,Ghiyab Al-Humra,Maghrib,Asr,Dhuhr,Sunrise,Fajr,Imsak,Hijri Date,Gregorian Date,Day,City
 0:13,20:02,18:31,18:21,15:46,13:04,7:51,6:08,5:58,1 Ramadan 1447,2026�02�18,Wednesday,Paris
@@ -572,3 +573,5 @@ Midnight,Isha,Ghiyab Al-Humra,Maghrib,Asr,Dhuhr,Sunrise,Fajr,Imsak,Hijri Date,Gr
 23:25,19:19,18:20,18:10,15:27,12:01,5:55,4:44,4:34,29 Ramadan 1447,2026�03�18,Wednesday,Riyadh
 23:24,19:19,18:20,18:10,15:27,12:01,5:54,4:42,4:32,30 Ramadan 1447,2026�03�19,Thursday,Riyadh
 >>>>>>> a319aff (Add Iftar timer next to today's date)
+=======
+>>>>>>> f050f62 (Trigger workflow: update README branch references)
