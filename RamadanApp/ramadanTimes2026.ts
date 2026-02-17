@@ -58,7 +58,6 @@ export const RAMADAN_2026_PRAYER_TIMES: Record<string, RamadanCityTable> = {
     ]
   },
 
-<<<<<<< HEAD
 export const RAMADAN_2026_PRAYER_TIMES: Record<string, RamadanCityTable> = {
  "Aix-en-Provence": {
     city: "Aix-en-Provence",
@@ -96,10 +95,6 @@ export const RAMADAN_2026_PRAYER_TIMES: Record<string, RamadanCityTable> = {
     ]
   },
 
-=======
->>>>>>> a319aff (Add Iftar timer next to today's date)
-=======
->>>>>>> 6ea7814 (Add Aix-en-Provence to France cities and timezone support)
   "Paris": {
     city: "Paris",
     days: [
