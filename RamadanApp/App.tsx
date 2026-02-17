@@ -74,6 +74,7 @@ const CITY_TIMEZONES: Record<string, string> = {
   'london': 'Europe/London',
   'new york': 'America/New_York',
   'paris': 'Europe/Paris',
+  'aix-en-provence': 'Europe/Paris',
   'cairo': 'Africa/Cairo',
   'riyadh': 'Asia/Riyadh',
   'dubai': 'Asia/Dubai',

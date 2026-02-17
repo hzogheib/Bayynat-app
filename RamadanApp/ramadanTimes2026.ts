@@ -19,7 +19,10 @@ export interface RamadanDay {
 export type RamadanCityTable = {
   city: string;
   days: RamadanDay[];
-  "Aix-en-Provence": {
+};
+
+export const RAMADAN_2026_PRAYER_TIMES: Record<string, RamadanCityTable> = {
+ "Aix-en-Provence": {
     city: "Aix-en-Provence",
     days: [
       { midnight: "0:06", isha: "19:48", ghiyab: "18:28", maghrib: "18:18", asr: "15:45", dhuhr: "12:52", sunrise: "7:30", fajr: "5:57", imsak: "5:47", hijri: "1 Ramadan 1447", gregorian: "2026-02-18", day: "Wednesday" },
@@ -54,9 +57,7 @@ export type RamadanCityTable = {
       { midnight: "0:00", isha: "20:25", ghiyab: "19:05", maghrib: "18:55", asr: "16:09", dhuhr: "12:46", sunrise: "6:41", fajr: "5:08", imsak: "4:58", hijri: "30 Ramadan 1447", gregorian: "2026-03-19", day: "Thursday" }
     ]
   },
-};
 
-export const RAMADAN_2026_PRAYER_TIMES: Record<string, RamadanCityTable> = {
   "Paris": {
     city: "Paris",
     days: [
