@@ -17,12 +17,12 @@ A high-performance, mobile-first web application for Ramadan prayer timings, bas
 2. **Create GitHub Repo:**
    - Create a new repository on GitHub named `ramadan-app`.
    - Link it: `git remote add origin https://github.com/YOUR_USERNAME/ramadan-app.git`
-   - Push it: `git push -u origin main`
+   - Push it: `git push -u origin master`
 
 3. **Enable Hosting:**
    - Go to your repo on GitHub.com.
    - Click **Settings** -> **Pages**.
-   - Select the `main` branch and `/root` folder.
+   - Select the `master` branch and `/root` folder.
    - Click **Save**.
 
 ## 📱 How to "Install" on your Phone

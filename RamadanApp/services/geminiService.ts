@@ -193,7 +193,7 @@ export async function getCities(country: string) {
   // Static map of major cities for reliability
   // Only allow specific cities for each allowed country
   const majorCities: Record<string, string[]> = {
-    'france': ["Marseille", "Paris"],
+    'france': ["Marseille", "Paris", "Aix-en-Provence"],
     'gambia': ["Banjul"],
     'lebanon': ["Beirut", "Nabatiyeh"],
     'qatar': ["Doha"],

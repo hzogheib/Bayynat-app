@@ -70,12 +70,15 @@ const addMinutes = (timeStr: string, mins: number): string => {
 
 const CITY_TIMEZONES: Record<string, string> = {
   'beirut': 'Asia/Beirut',
+  'nabatiyeh': 'Asia/Beirut',
   'london': 'Europe/London',
   'new york': 'America/New_York',
   'paris': 'Europe/Paris',
   'cairo': 'Africa/Cairo',
   'riyadh': 'Asia/Riyadh',
   'dubai': 'Asia/Dubai',
+  'sharjah': 'Asia/Dubai',
+  'doha': 'Asia/Qatar',
   'tehran': 'Asia/Tehran',
   'baghdad': 'Asia/Baghdad',
   'karachi': 'Asia/Karachi',
@@ -140,20 +143,25 @@ const App: React.FC = () => {
   // Iftar timer state and effect (must be after todaySchedule/currentTime declarations)
   const [iftarCountdown, setIftarCountdown] = useState<string>("");
   useEffect(() => {
-    if (!todaySchedule || !todaySchedule.times.maghrib) {
+    if (!todaySchedule || !todaySchedule.times.maghrib || !location) {
       setIftarCountdown("");
       return;
     }
     const updateCountdown = () => {
-      const now = new Date();
+      // Get timezone for selected location
+      const tz = getCityTimezone(location.city);
+      // Current time in location's timezone
+      const now = DateTime.now().setZone(tz);
+      // Maghrib time in location's timezone
       const [maghribHour, maghribMinute] = todaySchedule.times.maghrib.split(":").map(Number);
-      const maghrib = new Date(now);
-      maghrib.setHours(maghribHour, maghribMinute, 0, 0);
-      let diff = maghrib.getTime() - now.getTime();
-      if (diff < 0) diff = 0;
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
+      const maghrib = now.set({ hour: maghribHour, minute: maghribMinute, second: 0, millisecond: 0 });
+      let diff = maghrib.diff(now, ['hours', 'minutes', 'seconds']).toObject();
+      if (diff.hours! < 0 || diff.minutes! < 0 || diff.seconds! < 0) {
+        diff = { hours: 0, minutes: 0, seconds: 0 };
+      }
+      const hours = Math.floor(diff.hours || 0);
+      const minutes = Math.floor(diff.minutes || 0);
+      const seconds = Math.floor(diff.seconds || 0);
       setIftarCountdown(`${hours.toString().padStart(2, '0')}:${minutes
         .toString()
         .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
@@ -161,7 +169,7 @@ const App: React.FC = () => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [todaySchedule, currentTime]);
+  }, [todaySchedule, currentTime, location]);
 
   // Calendar View States
   const [calendarType, setCalendarType] = useState<'gregorian' | 'hijri'>('gregorian');
@@ -442,15 +450,18 @@ const App: React.FC = () => {
   };
 
   const getNextPrayer = useCallback(() => {
-    if (!todaySchedule) return null;
-    const now = currentTime;
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    const keys = ['imsak', 'fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'ghiyabHumra', 'isha'] as const;
+    if (!todaySchedule || !location) return null;
+    // Use selected city's local time
+    const tz = getCityTimezone(location.city);
+    const now = DateTime.now().setZone(tz);
+    const nowMinutes = now.hour * 60 + now.minute;
+    const keys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
     let found = null;
     for (const key of keys) {
       const prayerTime = todaySchedule.times[key];
       if (!prayerTime) continue;
-      const prayerMinutes = timeToMinutes(prayerTime);
+      const [h, m] = prayerTime.split(":").map(Number);
+      const prayerMinutes = h * 60 + m;
       if (prayerMinutes > nowMinutes) {
         found = { name: PRAYER_NAMES[key].en, time: prayerTime };
         break;
@@ -472,7 +483,7 @@ const App: React.FC = () => {
       found = { name: PRAYER_NAMES.imsak.en, time: todaySchedule.times.imsak };
     }
     return found;
-  }, [todaySchedule, currentTime, schedule]);
+  }, [todaySchedule, schedule, location]);
 
   const nextPrayer = getNextPrayer();
 
@@ -537,7 +548,9 @@ const App: React.FC = () => {
         {iftarCountdown && (
           <div className="flex flex-col items-center justify-center mb-4">
             <span className="text-xs font-bold text-[#c5a021] uppercase tracking-widest">Time for Iftar</span>
-            <span className="text-3xl font-black text-white drop-shadow-lg font-mono">{iftarCountdown}</span>
+            <span className="text-3xl font-black text-white drop-shadow-lg font-mono">
+              {iftarCountdown === '00:00:00' || iftarCountdown === '0' ? 'افطارا شهيا' : iftarCountdown}
+            </span>
           </div>
         )}
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -564,23 +577,15 @@ const App: React.FC = () => {
           )}
           
           <div className="mb-4 border-b border-slate-50 pb-4">
-            <div className="flex items-center gap-2 text-[#006837] mb-1">
-              <CalendarDays size={16} />
-              <p className="text-[10px] font-black uppercase tracking-widest">Today's Date</p>
-            </div>
-            <div className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2 text-[#006837] mb-1">
+                <CalendarDays size={16} />
+                <p className="text-[10px] font-black uppercase tracking-widest">Today's Date</p>
+              </div>
               <div className="flex flex-col">
                 <span className="text-sm font-black text-slate-800">{alignedHijriDate || '...'}</span>
                 <span className="text-[11px] font-medium text-slate-400">{formattedGregorianDate}</span>
               </div>
-              {iftarCountdown && (
-                <div className="flex flex-col items-end ml-4">
-                  <span className="text-[10px] font-bold text-[#c5a021] uppercase tracking-widest">Time for Iftar</span>
-                  <span className="text-xl font-black text-[#006837] drop-shadow-lg font-mono">{iftarCountdown}</span>
-                </div>
-              )}
             </div>
-          </div>
 
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -629,18 +634,21 @@ const App: React.FC = () => {
               {prayerOrder.map((key) => {
                 const time = (todaySchedule?.times as any)?.[key];
                 if (!time) return null;
-                const isNext = nextPrayer?.time === time;
+                // Highlight if both key and time match nextPrayer (case-insensitive)
+                const isNext = nextPrayer &&
+                  nextPrayer.time === time &&
+                  PRAYER_NAMES[key]?.en?.toLowerCase() === nextPrayer.name?.toLowerCase();
                 return (
                   <div 
                     key={key}
                     className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
                       isNext 
-                      ? 'bg-[#006837] border-[#006837] text-white shadow-xl scale-[1.02]' 
-                      : 'bg-white border-slate-100 text-slate-800 hover:border-[#006837]/30 shadow-sm'
+                      ? 'bg-green-600 border-green-600 text-white shadow-xl scale-[1.02]' 
+                      : 'bg-white border-slate-100 text-slate-800 hover:border-green-600/30 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isNext ? 'bg-white/20 text-white' : 'bg-slate-50 text-[#006837]'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isNext ? 'bg-white/20 text-white' : 'bg-slate-50 text-green-600'}`}> 
                         {key === 'maghrib' || key === 'ghiyabHumra' ? <Moon size={20} /> : (key === 'fajr' || key === 'imsak' ? <Sun size={20} /> : <Clock size={20} />)}
                       </div>
                       <div>
@@ -648,7 +656,7 @@ const App: React.FC = () => {
                         <p className={`text-[10px] font-arabic font-bold ${isNext ? 'text-white/70' : 'text-slate-400'}`}>{PRAYER_NAMES[key]?.ar}</p>
                       </div>
                     </div>
-                    <div className={`text-xl font-black font-mono ${isNext ? 'text-[#c5a021]' : 'text-slate-800'}`}>
+                    <div className={`text-xl font-black font-mono ${isNext ? 'text-[#c5a021]' : 'text-slate-800'}`}> 
                       {time}
                     </div>
                   </div>
