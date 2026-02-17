@@ -1,0 +1,20 @@
+
+{
+  "short_name": "Bayynat",
+  "name": "Bayynat Ramadan App",
+  "description": "Official Bayynat prayer timings and Ramadan companion.",
+  "icons": [
+    {
+      "src": "https://www.bayynat.org.lb/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#006837",
+  "background_color": "#f8fafc"
+}
